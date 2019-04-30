@@ -161,7 +161,7 @@
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
-        </service>
+        <!--</service>-->
         <service
             android:name=".services.DownloadService"
             android:enabled="true"
