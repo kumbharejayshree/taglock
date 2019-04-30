@@ -25,7 +25,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -64,12 +63,10 @@ import io.realm.RealmResults;
 
 public class TaglockDeviceInfo {
 
-    DeviceInfoController deviceInfoController = new DeviceInfoController();
-    DeviceInformation deviceInformation = new DeviceInformation();
     private Context context;
     private WindowManager windowManager;
     private customViewGroup view;
-    SuperClass superClass;
+    private SuperClass superClass;
 
     public TaglockDeviceInfo(Context context) {
         this.context = context;
@@ -310,20 +307,9 @@ public class TaglockDeviceInfo {
     }
 
     public String getDeviceTime() {
-//        DateFormat df = DateFormat.getTimeInstance();
-//        df.setTimeZone(TimeZone.getTimeZone("Asia/Calcutta"));
-        Date ISTTime = Calendar.getInstance().getTime();//df.format(new Date());
         String IST = new SimpleDateFormat("yyyy-mm-dd HH:mm:ss").format(new Date());
         Log.d("DeviceTime: ", IST);
         return IST;
-    }
-
-    public String deviceEPOCHtime() {
-        long milliseconds  = System.currentTimeMillis();
-
-        long unixTimeStamp = milliseconds / 1000L;
-        Log.d("deviceEPOCHtime: ", String.valueOf(unixTimeStamp));
-        return String.valueOf(unixTimeStamp);
     }
 
     public void applyProfile() {
@@ -353,7 +339,6 @@ public class TaglockDeviceInfo {
                             defaultProfileController.addDefaultProfileData(defaultProfile);
                         }
                     }
-
                 }catch (JSONException je){
                     je.printStackTrace();
                 }
@@ -368,7 +353,6 @@ public class TaglockDeviceInfo {
     }
 
     public void deviceDetails(final DeviceInformation deviceInformation) {
-        final DeviceInfoController deviceInfoController = new DeviceInfoController();
         try {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("device_name", deviceInformation.getDevice_name());
@@ -436,7 +420,6 @@ public class TaglockDeviceInfo {
     }
 
     public void updateDevice(final DeviceInformation deviceInformation){
-        final DeviceInfoController deviceInfoController = new DeviceInfoController();
         String device_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
         try {
             JSONObject jsonObject = new JSONObject();
@@ -587,7 +570,7 @@ public class TaglockDeviceInfo {
                             updateDevice(deviceInformation);
                             SuperClass.unHideDefaultLauncher("com.oranth.launcher");
                             SuperClass.disableActivity(context);
-                            ((Activity) context).finish();
+                            ((Activity) context).finishAndRemoveTask();
                         }else {
                             alertEdit.setError("Passcode is incorrect");
                         }

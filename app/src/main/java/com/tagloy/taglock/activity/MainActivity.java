@@ -21,6 +21,7 @@ import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.CountDownTimer;
 import android.os.Environment;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -34,7 +35,6 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     DeviceInfoController deviceInfoController = new DeviceInfoController();
     DeviceInformation deviceInformation = new DeviceInformation();
-    DeviceInformation updateInformation = new DeviceInformation();
     RecentAppClickReceiver mReceiver = new RecentAppClickReceiver();
     PermissionsClass permissionsClass;
     PackageManager manager;
@@ -93,8 +92,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     ProgressBar downloadProgress;
     private long apkId,taglockId;
     private static final String TAG = "MainActivity";
-    private String apkPath = "/taglock/apkmanagement/";
-    private String taglockPath = "/taglock/taglockmanagement/";
     private static SuperClass superClass;
     CountDownTimer appCountDownTimer;
 
@@ -153,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         taglockDeviceInfo.deviceToken();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
-        provider = locationManager.getBestProvider(criteria, false);
+        provider = locationManager.getBestProvider(criteria, true);
         if (provider != null && !provider.equals("")) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return;
@@ -188,6 +185,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         ipText.setText("IPAddress: " + ip);
         String latitude = PreferenceHelper.getValueString(this,AppConfig.LATITUDE);
         String longitude = PreferenceHelper.getValueString(this,AppConfig.LONGITUDE);
+        Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
         deviceInformation.setLatitudes(latitude);
         deviceInformation.setLongitudes(longitude);
         deviceInformation.setIp_Address(ip);
@@ -297,8 +295,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         double lon = location.getLongitude();
         String latitude = String.valueOf(lat);
         String longitude =String.valueOf(lon);
-        PreferenceHelper.removeStringValue(MainActivity.this,"lat");
-        PreferenceHelper.removeStringValue(MainActivity.this,"long");
         PreferenceHelper.setValueString(MainActivity.this,AppConfig.LATITUDE,latitude);
         PreferenceHelper.setValueString(MainActivity.this,AppConfig.LONGITUDE,longitude);
         Log.d("Location", "Latitude: " + lat + " Longitude: " + lon);
@@ -365,6 +361,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         switch (item.getItemId()) {
             //On settings menu click
             case R.id.settingsMenu:
+                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                 break;
             //On refresh menu click
             case R.id.refreshMenu:
@@ -619,6 +616,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE|DownloadManager.Request.NETWORK_WIFI);
         request.setVisibleInDownloadsUi(false);
+        String apkPath = "/taglock/apkmanagement/";
         request.setDestinationInExternalPublicDir(apkPath,uri.getLastPathSegment());
         DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         apkId = downloadManager.enqueue(request);
@@ -651,6 +649,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE|DownloadManager.Request.NETWORK_WIFI);
         request.setVisibleInDownloadsUi(false);
+        String taglockPath = "/taglock/taglockmanagement/";
         request.setDestinationInExternalPublicDir(taglockPath,uri.getLastPathSegment());
         DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
         taglockId = downloadManager.enqueue(request);

@@ -6,6 +6,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
@@ -14,6 +16,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,6 +30,8 @@ import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.SuperClass;
 import com.tagloy.taglock.receiver.TaglockAdminReceiver;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
+
+import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -57,7 +62,7 @@ public class DeviceNameActivity extends AppCompatActivity implements View.OnClic
         permissionsClass = new PermissionsClass(this);
         devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         devicePolicyAdmin = new ComponentName(this, TaglockAdminReceiver.class);
-        PreferenceHelper.setValueBoolean(this,AppConfig.IS_ACTIVE,false);
+        PreferenceHelper.setValueBoolean(this,AppConfig.IS_ACTIVE,true);
         superClass.hideNavToggle();
         permissionsClass.getPermission(this, this, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
         if (isMyPolicyActive()){
