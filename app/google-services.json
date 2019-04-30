@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "72134291367",
+    "firebase_url": "https://taglock-1a991.firebaseio.com",
+    "project_id": "taglock-1a991",
+    "storage_bucket": "taglock-1a991.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:72134291367:android:1e88f549320fc94a",
+        "android_client_info": {
+          "package_name": "com.tagloy.taglock"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "72134291367-39g9vl59atrv9elr7lqlcp65gtvisgc9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tagloy.taglock",
+            "certificate_hash": "adcba02621b2ffa4be438ccad64f57458c3630af"
+          }
+        },
+        {
+          "client_id": "72134291367-hu13iaeo6qu3tam0h0uvq42chbkq30eb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGN-t6O-cnvuCYPiQLK0nzIvsRsyuPPis"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "72134291367-hu13iaeo6qu3tam0h0uvq42chbkq30eb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">TagLock</string>
+    <string name="device_name">Device Name</string>
+    <string name="device_group">Device Group</string>
+    <string name="wifi_settings">WiFi Settings</string>
+    <string name="permissions">Permissions</string>
+    <string name="device_admin">Taglock Device Admin</string>
+    <string name="device_admin_description">Allows Tagtalk Admins to control, manage and monitor the device</string>
+    <string name="admin_explanation">Taglock Device Admin helps the user to get special privileges, e.g. to access the Taglock features. These privileges can only be acquired by accepting these policies.</string>
+    <string name="google_api">AIzaSyDsX1CzPpgttz2Q5Ka41lcIaunXErCdkjo</string>
+    <string name="device_name_hint">Name (e.g. TL-City Code-1000)</string>
+    <string name="device_name_text">TL-</string>
+    <string name="passcode">Enter Passcode</string>
+    <string name="next_button">Next</string>
+    <string name="device_call">What should we call your device?</string>
+    <string name="device_des">You can search device using its name from dashboard.(e.g. TL-City Code-Box code)</string>
+    <string name="group_key">Enter Group Key*</string>
+
+    <string name="admin_permission">Activate TagLock Device Admin to provide better kiosk environment.</string>
+    <string name="usage_access">We need "Usage Access" permission to provide app block/unblock facility. Enable "TagLock" on the following screen.</string>
+    <string name="app_notification">We need "Notification Access" permission to block notifications, instead unread notifications are displayed as badge on app icons in TagLock homescreen. Enable "TagLock" on the following screen.</string>
+    <string name="unknown_source">This permission is required to enable installation of apk\'\s pushed from TagLock dashboard. Please check/enable "Unknown Sources" option in following screen.</string>
+    <string name="download_manager">We need download manager enabled to support. Press "OK" and "ENABLE" on the following screen.</string>\
+    <string name="overlay_permission">We require this permission to hide status bar, show notification center and background running apps, etc.</string>
+    <string name="write_system">We wil need this permission to change device brightness, device rotation, device screen timeout settings and create hotspot, etc. Note: If you see that it is already enabled, just uncheck and recheck so that permission will grant properly.</string>
+    <string name="device_details">We need this permission to access phone number, cellular network info and ongoing calls.</string>
+    <string name="device_camera">TagLock need camera permission to open camera, flashlight and capture security incidents, etc.</string>
+    <string name="device_storage">TagLock require device storage permission to access files and folders.</string>
+    <string name="contacts_access">TagLock require this permission to access accounts and contacts.</string>
+    <string name="device_location">TagLock needs location permission to get the location of device and show on dashboard.</string>
+
+    <string name="hello_blank_fragment">Device Name</string>
+</resources>
