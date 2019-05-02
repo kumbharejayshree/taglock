@@ -179,11 +179,6 @@ public class SuperClass {
 
     //To Hide the Default Launcher app
     public void hideDefaultLauncher(String packageName){
-//        PackageManager pm =  context.getPackageManager();
-//        Intent i = new Intent(Intent.ACTION_MAIN);
-//        i.addCategory(Intent.CATEGORY_HOME);
-//        List<ResolveInfo> lst = pm.queryIntentActivities(i, 0);
-//        String packageName = lst.get(0).activityInfo.packageName;
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm disable " + packageName});
             root.waitFor();
@@ -196,11 +191,6 @@ public class SuperClass {
 
     //To UnHide the Default Launcher app
     public void unHideDefaultLauncher(String packageName){
-//        PackageManager pm =  context.getPackageManager();
-//        Intent i = new Intent(Intent.ACTION_MAIN);
-//        i.addCategory(Intent.CATEGORY_HOME);
-//        List<ResolveInfo> lst = pm.queryIntentActivities(i, 0);
-//        String packageName = lst.get(0).activityInfo.packageName;
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm enable " + packageName});
             root.waitFor();

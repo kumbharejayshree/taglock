@@ -59,6 +59,7 @@ public class DeviceGroupActivity extends AppCompatActivity implements View.OnCli
         superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         taglockDeviceInfo.hideStatusBar();
+        taglockDeviceInfo.getLauncher();
         RequestQueue queue = Volley.newRequestQueue(this);
         StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GROUP_URL, new Response.Listener<String>() {
             @Override

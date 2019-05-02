@@ -74,13 +74,13 @@ public class TaglockDeviceInfo {
     }
 
 
-    public String getLauncher(){
+    public void getLauncher(){
         PackageManager pm =  context.getPackageManager();
         Intent i = new Intent(Intent.ACTION_MAIN);
         i.addCategory(Intent.CATEGORY_HOME);
         List<ResolveInfo> lst = pm.queryIntentActivities(i, 0);
         String packageName = lst.get(0).activityInfo.packageName;
-        return packageName;
+        PreferenceHelper.setValueString(context,AppConfig.DEVICE_LAUNCHER,packageName);
     }
 
     public boolean isNetworkConnected() {
