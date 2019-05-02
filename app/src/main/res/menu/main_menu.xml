@@ -2,20 +2,20 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/settingsMenu"
-        android:title="Settings"/>
+        android:id="@+id/infoMenu"
+        android:title="@string/info"/>
 
     <item
         android:id="@+id/wifiMenu"
-        android:title="WiFi Settings"/>
+        android:title="@string/wifi"/>
 
     <item
         android:id="@+id/refreshMenu"
-        android:title="Refresh"/>
+        android:title="@string/refresh"/>
     <item
         android:id="@+id/clearMenu"
-        android:title="Clear Data"/>
+        android:title="@string/clear"/>
     <item
         android:id="@+id/exitMenu"
-        android:title="Exit TagLock"/>
+        android:title="@string/exit"/>
 </menu>

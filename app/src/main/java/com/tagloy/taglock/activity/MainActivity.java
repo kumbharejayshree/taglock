@@ -27,6 +27,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -360,8 +361,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             //On settings menu click
-            case R.id.settingsMenu:
-                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            case R.id.infoMenu:
+                Intent infoIntent = new Intent(MainActivity.this, InfoActivity.class);
+                startActivity(infoIntent);
                 break;
             //On refresh menu click
             case R.id.refreshMenu:
@@ -376,8 +378,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 return true;
             //On wifi menu click
             case R.id.wifiMenu:
-                Intent intent = new Intent(MainActivity.this, WifiActivity.class);
-                startActivity(intent);
+                Intent wifiIntent = new Intent(MainActivity.this, WifiActivity.class);
+                startActivity(wifiIntent);
                 break;
             //On logout menu click
             case R.id.clearMenu:
