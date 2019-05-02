@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.location.Criteria;
 import android.location.Location;
@@ -145,7 +146,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         appsGrid = findViewById(R.id.appsGrid);
         manager = getPackageManager();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        SuperClass.hideDefaultLauncher("com.oranth.launcher");
+
+        String packageName = PreferenceHelper.getValueString(this,AppConfig.DEVICE_LAUNCHER);
+        superClass.hideDefaultLauncher(packageName);
         taglockDeviceInfo.hideStatusBar();
         superClass.hideNavToggle();
         taglockDeviceInfo.deviceToken();

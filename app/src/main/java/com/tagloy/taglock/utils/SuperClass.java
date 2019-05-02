@@ -4,7 +4,11 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.util.Log;
+
 import com.tagloy.taglock.activity.MainActivity;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
@@ -174,7 +178,12 @@ public class SuperClass {
     }
 
     //To Hide the Default Launcher app
-    public static void hideDefaultLauncher(String packageName){
+    public void hideDefaultLauncher(String packageName){
+//        PackageManager pm =  context.getPackageManager();
+//        Intent i = new Intent(Intent.ACTION_MAIN);
+//        i.addCategory(Intent.CATEGORY_HOME);
+//        List<ResolveInfo> lst = pm.queryIntentActivities(i, 0);
+//        String packageName = lst.get(0).activityInfo.packageName;
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm disable " + packageName});
             root.waitFor();
@@ -186,7 +195,12 @@ public class SuperClass {
     }
 
     //To UnHide the Default Launcher app
-    public static void unHideDefaultLauncher(String packageName){
+    public void unHideDefaultLauncher(String packageName){
+//        PackageManager pm =  context.getPackageManager();
+//        Intent i = new Intent(Intent.ACTION_MAIN);
+//        i.addCategory(Intent.CATEGORY_HOME);
+//        List<ResolveInfo> lst = pm.queryIntentActivities(i, 0);
+//        String packageName = lst.get(0).activityInfo.packageName;
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm enable " + packageName});
             root.waitFor();

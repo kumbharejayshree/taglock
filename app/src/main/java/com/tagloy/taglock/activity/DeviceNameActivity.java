@@ -64,6 +64,10 @@ public class DeviceNameActivity extends AppCompatActivity implements View.OnClic
         devicePolicyAdmin = new ComponentName(this, TaglockAdminReceiver.class);
         PreferenceHelper.setValueBoolean(this,AppConfig.IS_ACTIVE,true);
         superClass.hideNavToggle();
+
+        String packageName = taglockDeviceInfo.getLauncher();
+        PreferenceHelper.setValueString(this,AppConfig.DEVICE_LAUNCHER,packageName);
+
         permissionsClass.getPermission(this, this, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
         if (isMyPolicyActive()){
             boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);

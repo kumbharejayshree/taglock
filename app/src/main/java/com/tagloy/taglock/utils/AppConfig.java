@@ -17,6 +17,7 @@ public class AppConfig {
     public static final String FETCH_APPS = "http://13.232.206.57/app/androidvisible/1";
     public static final String TAGLOCK_PREF = "taglock_pref";
     public static final String IS_ACTIVE = "taglock";
+    public static final String DEVICE_LAUNCHER = "device_launcher";
     public static final String APK_NAME = "apk_name";
     public static final String APK_DOWN_STATUS = "apk_down_status";
     public static final String INSTALL_STATUS = "install_status";

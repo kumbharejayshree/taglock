@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.PixelFormat;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -70,6 +71,16 @@ public class TaglockDeviceInfo {
 
     public TaglockDeviceInfo(Context context) {
         this.context = context;
+    }
+
+
+    public String getLauncher(){
+        PackageManager pm =  context.getPackageManager();
+        Intent i = new Intent(Intent.ACTION_MAIN);
+        i.addCategory(Intent.CATEGORY_HOME);
+        List<ResolveInfo> lst = pm.queryIntentActivities(i, 0);
+        String packageName = lst.get(0).activityInfo.packageName;
+        return packageName;
     }
 
     public boolean isNetworkConnected() {
@@ -568,7 +579,8 @@ public class TaglockDeviceInfo {
                             deviceInformation.setDevice_locked_status(false);
                             deviceInfoController.updateTaglockStatus(PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME), false);
                             updateDevice(deviceInformation);
-                            SuperClass.unHideDefaultLauncher("com.oranth.launcher");
+                            String packageName = PreferenceHelper.getValueString(context,AppConfig.DEVICE_LAUNCHER);
+                            superClass.unHideDefaultLauncher(packageName);
                             SuperClass.disableActivity(context);
                             ((Activity) context).finishAndRemoveTask();
                         }else {
