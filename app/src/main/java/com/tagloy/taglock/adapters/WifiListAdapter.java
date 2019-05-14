@@ -4,23 +4,19 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class WifiListAdapter extends BaseAdapter {
@@ -87,7 +83,9 @@ public class WifiListAdapter extends BaseAdapter {
                     alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            wifiManager.removeNetwork(wifiInfo.getNetworkId());
+                            wifiManager.disableNetwork(wifiInfo.getNetworkId());
+                            if (Build.VERSION.SDK_INT < 26)
+                                wifiManager.saveConfiguration();
                         }
                     });
                     alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -96,11 +94,12 @@ public class WifiListAdapter extends BaseAdapter {
                             dialog.cancel();
                         }
                     });
+                    alert.create();
                     alert.show();
                 }
             });
         }else {
-            viewHolder.statusText.setText("Not connected");
+            viewHolder.statusText.setText("");
         }
         return convertView;
     }

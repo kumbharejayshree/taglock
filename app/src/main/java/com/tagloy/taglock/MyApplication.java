@@ -27,7 +27,7 @@ public class MyApplication extends Application {
                 .build();
         Realm.setDefaultConfiguration(realmConfiguration);
         this.mrealm = RealmController.with(this).getRealm();
-//gourav 9-4-19
+
 //for db debugging purpose you can view db structure in chrome
         Stetho.initialize(
                 Stetho.newInitializerBuilder(this)

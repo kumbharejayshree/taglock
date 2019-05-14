@@ -45,59 +45,60 @@ public class DeviceNameActivity extends AppCompatActivity implements View.OnClic
     TaglockDeviceInfo taglockDeviceInfo;
     SharedPreferences sharedPreferences;
     PermissionsClass permissionsClass;
-    String ParseJson;
     private static final int REQUEST_SYSTEM_ALERT = 105;
     private static final int REQUEST_OVERLAY = 120;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Fabric.with(this,new Crashlytics());
+        Fabric.with(this, new Crashlytics());
         setContentView(R.layout.activity_device_name);
         deviceNameEdit = findViewById(R.id.deviceNameEdit);
         submitNameBtn = findViewById(R.id.submitNameBtn);
-        sharedPreferences = getSharedPreferences(AppConfig.TAGLOCK_PREF,Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
         submitNameBtn.setOnClickListener(this);
         superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         permissionsClass = new PermissionsClass(this);
         devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         devicePolicyAdmin = new ComponentName(this, TaglockAdminReceiver.class);
-        PreferenceHelper.setValueBoolean(this,AppConfig.IS_ACTIVE,true);
+        PreferenceHelper.setValueBoolean(this, AppConfig.IS_ACTIVE, true);
         superClass.hideNavToggle();
 
-        permissionsClass.getPermission(this, this, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
-        if (isMyPolicyActive()){
+        if (isMyPolicyActive()) {
             boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
             boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
             boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
             boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
             boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-            if (phone && location && contacts && camera && storage){
+            if (phone && location && contacts && camera && storage) {
                 SuperClass.enableActivity(this);
-                Intent intent = new Intent(DeviceNameActivity.this,MainActivity.class);
+                Intent intent = new Intent(DeviceNameActivity.this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
-            }else{
+            } else {
                 SuperClass.disableActivity(this);
-                Intent intent = new Intent(DeviceNameActivity.this,AdminActivity.class);
+                Intent intent = new Intent(DeviceNameActivity.this, AdminActivity.class);
                 startActivity(intent);
                 finish();
             }
-        }else{
+        } else {
             SuperClass.disableActivity(this);
+            if (Build.VERSION.SDK_INT>=23)
+                permissionsClass.getPermission(this, this, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
         }
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.submitNameBtn:
-                if (TextUtils.isEmpty(deviceNameEdit.getText())){
+                if (TextUtils.isEmpty(deviceNameEdit.getText())) {
                     deviceNameEdit.setError("Please enter device name");
-                }else if(deviceNameEdit.getText().toString().equals("TL-")){
+                } else if (deviceNameEdit.getText().toString().equals("TL-")) {
                     deviceNameEdit.setError("Please enter valid device name");
-                }else{
+                } else {
                     final String deviceName = deviceNameEdit.getText().toString().trim();
                     taglockDeviceInfo.checkNameValidity(deviceName);
                 }
@@ -106,7 +107,7 @@ public class DeviceNameActivity extends AppCompatActivity implements View.OnClic
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
+        switch (requestCode) {
             case REQUEST_SYSTEM_ALERT:
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
@@ -122,8 +123,8 @@ public class DeviceNameActivity extends AppCompatActivity implements View.OnClic
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (resultCode==RESULT_OK){
-            switch (requestCode){
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
                 case REQUEST_OVERLAY:
                     Toast.makeText(getApplicationContext(), "Overlay permission granted", Toast.LENGTH_LONG).show();
                     finish();

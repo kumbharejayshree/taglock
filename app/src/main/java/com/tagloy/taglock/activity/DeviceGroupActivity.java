@@ -3,6 +3,7 @@ package com.tagloy.taglock.activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -11,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -46,6 +48,7 @@ public class DeviceGroupActivity extends AppCompatActivity implements View.OnCli
     ArrayAdapter<String> arrayAdapter;
     TaglockDeviceInfo taglockDeviceInfo;
     SharedPreferences sharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,63 +56,70 @@ public class DeviceGroupActivity extends AppCompatActivity implements View.OnCli
         groupSpinner = findViewById(R.id.groupNameSpinner);
         submitGroupBtn = findViewById(R.id.submitGroupBtn);
         groupKeyEdit = findViewById(R.id.groupKeyEdit);
-        sharedPreferences = getSharedPreferences(AppConfig.TAGLOCK_PREF,Context.MODE_PRIVATE);
-        arrayAdapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,list);
+        sharedPreferences = getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, list);
         submitGroupBtn.setOnClickListener(this);
         superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
-        taglockDeviceInfo.hideStatusBar();
+        if (Build.VERSION.SDK_INT>=23)
+            taglockDeviceInfo.hideStatusBar();
         taglockDeviceInfo.getLauncher();
-        RequestQueue queue = Volley.newRequestQueue(this);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GROUP_URL, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                groupJson = response;
-                new ParseGroups(DeviceGroupActivity.this).execute();
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
+        if (taglockDeviceInfo.isNetworkConnected()) {
+            RequestQueue queue = Volley.newRequestQueue(this);
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GROUP_URL, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    groupJson = response;
+                    new ParseGroups(DeviceGroupActivity.this).execute();
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
 
-            }
-        }){
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String,String> params = new HashMap<>();
-                params.put("Content-Type","application/json");
-                return params;
-            }
-        };
-        queue.add(stringRequest);
+                }
+            }) {
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("Content-Type", "application/json");
+                    return params;
+                }
+            };
+            queue.add(stringRequest);
+        } else {
+            Toast.makeText(this, "Please check network connection", Toast.LENGTH_LONG).show();
+        }
+
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.submitGroupBtn:
                 String groupName = groupSpinner.getSelectedItem().toString();
-                if (TextUtils.isEmpty(groupKeyEdit.getText())){
+                if (TextUtils.isEmpty(groupKeyEdit.getText())) {
                     groupKeyEdit.setError("Please enter group key");
-                }else {
+                } else {
                     String groupKey = groupKeyEdit.getText().toString();
-                    taglockDeviceInfo.checkGroupKey(groupName,groupKey);
+                    taglockDeviceInfo.checkGroupKey(groupName, groupKey);
                 }
         }
     }
 
-    public class ParseGroups extends AsyncTask<Void,Void,Void>{
+    public class ParseGroups extends AsyncTask<Void, Void, Void> {
         Context context;
-        public ParseGroups(Context context){
+
+        public ParseGroups(Context context) {
             this.context = context;
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            if (groupsList!=null){
+            if (groupsList != null) {
                 Groups groups;
-                try{
+                try {
                     JSONArray jsonArray = new JSONArray(groupJson);
-                    for(int j=0;j<jsonArray.length();j++){
+                    for (int j = 0; j < jsonArray.length(); j++) {
                         groups = new Groups();
                         JSONObject tagGroup = jsonArray.getJSONObject(j);
                         list.add(tagGroup.getString("group_name"));
@@ -117,7 +127,7 @@ public class DeviceGroupActivity extends AppCompatActivity implements View.OnCli
                         groups.group_id = tagGroup.getString("group_id");
                         groupsList.add(groups);
                     }
-                }catch (JSONException je){
+                } catch (JSONException je) {
                     je.printStackTrace();
                 }
             }

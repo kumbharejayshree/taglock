@@ -80,7 +80,8 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         permissionsAdapter = new PermissionsAdapter(this, permissions);
         SuperClass.grantRoot();
         superClass.enableUnknownSource();
-        taglockDeviceInfo.hideStatusBar();
+        if (Build.VERSION.SDK_INT>=23)
+            taglockDeviceInfo.hideStatusBar();
         taglockDeviceInfo.applyProfile();
         permissionListView = findViewById(R.id.permissionsList);
         View footerView = ((LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.footer_layout,null,false);

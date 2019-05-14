@@ -7,13 +7,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
 
+import com.tagloy.taglock.R;
 import com.tagloy.taglock.activity.MainActivity;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 
 import io.realm.RealmResults;
@@ -103,12 +108,34 @@ public class SuperClass {
         final String packageName = getProfile.get(0).getApp_package_name();
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm clear " + packageName});
+            File dir = new File(Environment.getExternalStorageDirectory() + "/tagloy/");
+            deleteDir(dir);
             root.waitFor();
         }catch (IOException ie){
             ie.printStackTrace();
         }catch (InterruptedException ine){
             ine.printStackTrace();
         }
+    }
+
+    //To delete directory
+    public static boolean deleteDir(File dir) {
+        try {
+            if (dir.isDirectory() && dir.exists()) {
+                String[] children = dir.list();
+                for (int i = 0; i < children.length; i++) {
+                    boolean success = deleteDir(new File(dir, children[i]));
+                    if (!success) {
+                        return false;
+                    }
+                }
+            }
+        } catch (NullPointerException ne) {
+            ne.printStackTrace();
+        }
+
+        // The directory is now empty so delete it
+        return dir.delete();
     }
     //To update app from given apk name
     public static void updateApp(String apkName){

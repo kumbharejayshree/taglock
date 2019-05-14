@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.tagloy.taglock.activity.MainActivity;
+import com.tagloy.taglock.utils.ApkManagement;
 import com.tagloy.taglock.utils.AppConfig;
 import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.SuperClass;
@@ -18,6 +19,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMessagingServ";
     SuperClass superClass = new SuperClass(this);
+    ApkManagement apkManagement = new ApkManagement(this);
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -40,6 +42,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                             superClass.shutdownDevice();
                             break;
                         case "download":
+                            apkManagement.getApk();
+                            break;
+                        case "downloadtag":
+                            apkManagement.getTaglock();
                             break;
                         case "install":
                             new MainActivity.InstallApp(getApplicationContext(),apk_name).execute();

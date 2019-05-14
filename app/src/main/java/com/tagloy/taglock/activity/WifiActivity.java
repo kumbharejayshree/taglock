@@ -50,7 +50,8 @@ public class WifiActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifi);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
-        taglockDeviceInfo.hideStatusBar();
+        if (Build.VERSION.SDK_INT>=23)
+            taglockDeviceInfo.hideStatusBar();
         wifiListView = findViewById(R.id.wifiListView);
         wifiScanReceiver = new WifiScanReceiver();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);

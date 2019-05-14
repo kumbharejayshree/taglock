@@ -44,6 +44,7 @@ import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmcontrollers.DeviceInfoController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
 import com.tagloy.taglock.realmmodels.DeviceInformation;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,18 +75,36 @@ public class TaglockDeviceInfo {
     }
 
 
-    public void getLauncher(){
-        PackageManager pm =  context.getPackageManager();
+    public void getLauncher() {
+        PackageManager pm = context.getPackageManager();
         Intent i = new Intent(Intent.ACTION_MAIN);
         i.addCategory(Intent.CATEGORY_HOME);
         List<ResolveInfo> lst = pm.queryIntentActivities(i, 0);
         String packageName = lst.get(0).activityInfo.packageName;
-        PreferenceHelper.setValueString(context,AppConfig.DEVICE_LAUNCHER,packageName);
+        PreferenceHelper.setValueString(context, AppConfig.DEVICE_LAUNCHER, packageName);
     }
 
     public boolean isNetworkConnected() {
         NetworkInfo info = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        return info != null;
+        return info != null && info.isConnected();
+    }
+
+    public Boolean isWifiConnected() {
+        if (isNetworkConnected()) {
+            ConnectivityManager cm
+                    = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            return (cm.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_WIFI);
+        }
+        return false;
+    }
+
+    public Boolean isEthernetConnected() {
+        if (isNetworkConnected()) {
+            ConnectivityManager cm
+                    = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            return (cm.getActiveNetworkInfo().getType() == ConnectivityManager.TYPE_ETHERNET);
+        }
+        return false;
     }
 
     public Integer getIpAddress() {
@@ -150,87 +169,35 @@ public class TaglockDeviceInfo {
     }
 
 
-    public void checkNameValidity(final String deviceName){
-        try{
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("device_name", deviceName);
-            final String request = jsonObject.toString();
-            RequestQueue queue = Volley.newRequestQueue(context);
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.NAME_VALIDITY_URL, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    try{
-                        JSONObject name = new JSONObject(response);
-                        String status = name.getString("status");
-                        if (status.equals("200")){
-                            Toast.makeText(context, "Name already exists", Toast.LENGTH_LONG).show();
+    public void checkNameValidity(final String deviceName) {
+        if (isNetworkConnected()) {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("device_name", deviceName);
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.NAME_VALIDITY_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject name = new JSONObject(response);
+                            String status = name.getString("status");
+                            if (status.equals("200")) {
+                                Toast.makeText(context, "Name already exists", Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException je) {
+                            je.printStackTrace();
                         }
-                    }catch (JSONException je){
-                        je.printStackTrace();
                     }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_NAME,deviceName);
-                    Intent intent = new Intent(context, DeviceGroupActivity.class);
-                    intent.putExtra("device_name",deviceName);
-                    context.startActivity(intent);
-                }
-            }){
-                @Override
-                public Map<String, String> getHeaders() throws AuthFailureError {
-                    Map<String, String> parameter = new HashMap<>();
-                    parameter.put("Content-Type", "application/json");
-                    return parameter;
-                }
-
-                @Override
-                public byte[] getBody() throws AuthFailureError {
-                    try {
-                        return request == null ? null : request.getBytes("utf-8");
-                    } catch (UnsupportedEncodingException uee) {
-                        VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
-                        return null;
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        PreferenceHelper.setValueString(context, AppConfig.DEVICE_NAME, deviceName);
+                        Intent intent = new Intent(context, DeviceGroupActivity.class);
+                        intent.putExtra("device_name", deviceName);
+                        context.startActivity(intent);
                     }
-                }
-            };
-            queue.add(stringRequest);
-        }catch (JSONException je){
-            je.printStackTrace();
-        }
-    }
-
-    public void checkGroupKey(final String groupName,final String groupKey){
-        try{
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("group_name", groupName);
-            jsonObject.put("group_key",groupKey);
-            final String request = jsonObject.toString();
-            RequestQueue queue = Volley.newRequestQueue(context);
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GROUP_VALIDITY_URL, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    try{
-                        JSONObject name = new JSONObject(response);
-                        String status = name.getString("status");
-                        if (status.equals("200")){
-                            PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,groupName);
-                            Intent intent = new Intent(context, AdminActivity.class);
-                            context.startActivity(intent);
-                        }else if(status.equals("404")){
-                            Toast.makeText(context, "Group key is invalid. Please check!", Toast.LENGTH_LONG).show();
-                        }
-                    }catch (JSONException je){
-                        je.printStackTrace();
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.d("API","Error");
-                }
-            }){
+                }) {
                     @Override
                     public Map<String, String> getHeaders() throws AuthFailureError {
                         Map<String, String> parameter = new HashMap<>();
@@ -247,10 +214,70 @@ public class TaglockDeviceInfo {
                             return null;
                         }
                     }
-            };
-            queue.add(stringRequest);
-        }catch (JSONException je){
-            je.printStackTrace();
+                };
+                queue.add(stringRequest);
+            } catch (JSONException je) {
+                je.printStackTrace();
+            }
+        } else {
+            Toast.makeText(context, "Please check network connection", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void checkGroupKey(final String groupName, final String groupKey) {
+        if (isNetworkConnected()) {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("group_name", groupName);
+                jsonObject.put("group_key", groupKey);
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GROUP_VALIDITY_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject name = new JSONObject(response);
+                            String status = name.getString("status");
+                            if (status.equals("200")) {
+                                PreferenceHelper.setValueString(context, AppConfig.DEVICE_GROUP, groupName);
+                                Intent intent = new Intent(context, AdminActivity.class);
+                                context.startActivity(intent);
+                            } else if (status.equals("404")) {
+                                Toast.makeText(context, "Group key is invalid. Please check!", Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException je) {
+                            je.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("API", "Error");
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> parameter = new HashMap<>();
+                        parameter.put("Content-Type", "application/json");
+                        return parameter;
+                    }
+
+                    @Override
+                    public byte[] getBody() throws AuthFailureError {
+                        try {
+                            return request == null ? null : request.getBytes("utf-8");
+                        } catch (UnsupportedEncodingException uee) {
+                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
+                            return null;
+                        }
+                    }
+                };
+                queue.add(stringRequest);
+            } catch (JSONException je) {
+                je.printStackTrace();
+            }
+        } else {
+            Toast.makeText(context, "Please check network connection", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -324,178 +351,215 @@ public class TaglockDeviceInfo {
     }
 
     public void applyProfile() {
-        final DefaultProfileController defaultProfileController = new DefaultProfileController();
-        final DefaultProfile defaultProfile = new DefaultProfile();
-        String group_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
-        RequestQueue queue = Volley.newRequestQueue(context);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.PROFILE_URL + group_name, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try{
-                    JSONArray jsonArray = new JSONArray(response);
-                    for(int i=0;i<jsonArray.length();i++){
-                        JSONObject profile = jsonArray.getJSONObject(i);
-                        defaultProfile.setApp_package_name(profile.getString("apk_package"));
-                        defaultProfile.setTaglock_exited_status("1".equals(profile.getString("taglock_status")));
-                        defaultProfile.setNavigationbar_status("1".equals(profile.getString("nav_status")));
-                        defaultProfile.setPasscode(profile.getInt("passcode"));
-                        defaultProfile.setClear_data_passcode(profile.getInt("clear_passcode"));
-                        defaultProfile.setDefault_apk_call_duration(profile.getInt("default_apk_call"));
-                        defaultProfile.setGroup_name(profile.getString("group_name"));
-                        defaultProfile.setDefault_apk_version(profile.getString("apk_version"));
-                        boolean profileRealm = defaultProfileController.isAvailablProfileData(profile.getString("group_name"));
-                        if (profileRealm){
-                            defaultProfileController.updateProfileDataContent(profile.getString("group_name"),defaultProfile);
-                        }else {
-                            defaultProfileController.addDefaultProfileData(defaultProfile);
+        if (isNetworkConnected()){
+            final DefaultProfileController defaultProfileController = new DefaultProfileController();
+            final DefaultProfile defaultProfile = new DefaultProfile();
+            String group_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
+            try{
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("group_name", group_name);
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.PROFILE_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONArray jsonArray = new JSONArray(response);
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject profile = jsonArray.getJSONObject(i);
+                                defaultProfile.setApp_package_name(profile.getString("apk_package"));
+                                defaultProfile.setTaglock_exited_status("1".equals(profile.getString("taglock_status")));
+                                defaultProfile.setNavigationbar_status("1".equals(profile.getString("nav_status")));
+                                defaultProfile.setPasscode(profile.getInt("passcode"));
+                                defaultProfile.setClear_data_passcode(profile.getInt("clear_passcode"));
+                                defaultProfile.setDefault_apk_call_duration(profile.getInt("default_apk_call"));
+                                defaultProfile.setGroup_name(profile.getString("group_name"));
+                                defaultProfile.setDefault_apk_version(profile.getString("apk_version"));
+                                boolean profileRealm = defaultProfileController.isAvailablProfileData(profile.getString("group_name"));
+                                if (profileRealm) {
+                                    defaultProfileController.updateProfileDataContent(profile.getString("group_name"), defaultProfile);
+                                } else {
+                                    defaultProfileController.addDefaultProfileData(defaultProfile);
+                                }
+                            }
+                        } catch (JSONException je) {
+                            je.printStackTrace();
                         }
                     }
-                }catch (JSONException je){
-                    je.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
 
-            }
-        });
-        queue.add(stringRequest);
-    }
+                    }
+                }){
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> parameter = new HashMap<>();
+                        parameter.put("Content-Type", "application/json");
+                        return parameter;
+                    }
 
-    public void deviceDetails(final DeviceInformation deviceInformation) {
-        try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("device_name", deviceInformation.getDevice_name());
-            jsonObject.put("device_group", deviceInformation.getDevice_group());
-            jsonObject.put("latitude", deviceInformation.getLatitudes());
-            jsonObject.put("longitude", deviceInformation.getLongitudes());
-            jsonObject.put("box_name", deviceInformation.getBox_Name());
-            jsonObject.put("box_android", deviceInformation.getAndroid_version());
-            jsonObject.put("box_api", deviceInformation.getDevice_Api_version());
-            jsonObject.put("device_locked", deviceInformation.getDevice_locked_status());
-            jsonObject.put("hdmi_status",deviceInformation.getHdmi_status());
-            jsonObject.put("default_apk_version",deviceInformation.getDefault_apk_version());
-            jsonObject.put("taglock_version",deviceInformation.getTaglock_version());
-            jsonObject.put("app_download_status",deviceInformation.getApp_download_status());
-            jsonObject.put("taglock_download_status",deviceInformation.getTaglock_download_status());
-            jsonObject.put("ip_address", deviceInformation.getIp_Address());
-            jsonObject.put("mac_address", deviceInformation.getMac_Address());
-            jsonObject.put("memory", deviceInformation.getStorage_memory());
-            jsonObject.put("ram", deviceInformation.getRam());
-            jsonObject.put("device_token", deviceInformation.getDevice_Token());
-            jsonObject.put("wifi_status", deviceInformation.getWifi_status());
-            jsonObject.put("updated_at",deviceInformation.getUpdated_at());
-            final String request = jsonObject.toString();
-            RequestQueue queue = Volley.newRequestQueue(context);
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.INSERT_DEVICE_URL, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    try {
-                        JSONObject jsonObject = new JSONObject(response);
-                        String res = jsonObject.getString("status");
-                        if (res.equals("201")) {
-                            Log.d("Success: ", "Device details inserted");
+                    @Override
+                    public byte[] getBody() throws AuthFailureError {
+                        try {
+                            return request == null ? null : request.getBytes("utf-8");
+                        } catch (UnsupportedEncodingException uee) {
+                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
+                            return null;
                         }
-                    } catch (JSONException je) {
-                        je.printStackTrace();
                     }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.d("Failure: ", "Device details not inserted");
-                }
-            }) {
-                @Override
-                public Map<String, String> getHeaders() throws AuthFailureError {
-                    Map<String, String> parameter = new HashMap<>();
-                    parameter.put("Content-Type", "application/json");
-                    return parameter;
-                }
-
-                @Override
-                public byte[] getBody() throws AuthFailureError {
-                    try {
-                        return request == null ? null : request.getBytes("utf-8");
-                    } catch (UnsupportedEncodingException uee) {
-                        VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
-                        return null;
-                    }
-                }
-            };
-            queue.add(stringRequest);
-        } catch (JSONException je) {
-            je.printStackTrace();
+                };
+                queue.add(stringRequest);
+            }catch (JSONException je) {
+                je.printStackTrace();
+            }
+        }else {
+            Log.d("Network Status", "Not connected");
         }
     }
 
-    public void updateDevice(final DeviceInformation deviceInformation){
-        String device_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
-        try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("device_group", deviceInformation.getDevice_group());
-            jsonObject.put("latitude", deviceInformation.getLatitudes());
-            jsonObject.put("longitude", deviceInformation.getLongitudes());
-            jsonObject.put("box_name", deviceInformation.getBox_Name());
-            jsonObject.put("box_android", deviceInformation.getAndroid_version());
-            jsonObject.put("box_api", deviceInformation.getDevice_Api_version());
-            jsonObject.put("device_locked", deviceInformation.getDevice_locked_status());
-            jsonObject.put("hdmi_status",deviceInformation.getHdmi_status());
-            jsonObject.put("default_apk_version",deviceInformation.getDefault_apk_version());
-            jsonObject.put("taglock_version",deviceInformation.getTaglock_version());
-            jsonObject.put("app_download_status",deviceInformation.getApp_download_status());
-            jsonObject.put("taglock_download_status",deviceInformation.getTaglock_download_status());
-            jsonObject.put("ip_address", deviceInformation.getIp_Address());
-            jsonObject.put("mac_address", deviceInformation.getMac_Address());
-            jsonObject.put("memory", deviceInformation.getStorage_memory());
-            jsonObject.put("ram", deviceInformation.getRam());
-            jsonObject.put("device_token", deviceInformation.getDevice_Token());
-            jsonObject.put("wifi_status", deviceInformation.getWifi_status());
-            jsonObject.put("updated_at",String.valueOf(System.currentTimeMillis()/1000));
-            final String request = jsonObject.toString();
-            RequestQueue queue = Volley.newRequestQueue(context);
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.UPDATE_DEVICE_URL + device_name, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    try {
-                        JSONObject jsonObject = new JSONObject(response);
-                        String res = jsonObject.getString("status");
-                        if (res.equals("200")) {
-                            Log.d("Success: ", "Device details updated");
-                        } else {
-                            Log.d("Failure: ", "Device details not updated");
+    public void deviceDetails(final DeviceInformation deviceInformation) {
+        if (isNetworkConnected()) {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("device_name", deviceInformation.getDevice_name());
+                jsonObject.put("device_group", deviceInformation.getDevice_group());
+                jsonObject.put("latitude", deviceInformation.getLatitudes());
+                jsonObject.put("longitude", deviceInformation.getLongitudes());
+                jsonObject.put("box_name", deviceInformation.getBox_Name());
+                jsonObject.put("box_android", deviceInformation.getAndroid_version());
+                jsonObject.put("box_api", deviceInformation.getDevice_Api_version());
+                jsonObject.put("device_locked", deviceInformation.getDevice_locked_status());
+                jsonObject.put("hdmi_status", deviceInformation.getHdmi_status());
+                jsonObject.put("default_apk_version", deviceInformation.getDefault_apk_version());
+                jsonObject.put("taglock_version", deviceInformation.getTaglock_version());
+                jsonObject.put("app_download_status", deviceInformation.getApp_download_status());
+                jsonObject.put("taglock_download_status", deviceInformation.getTaglock_download_status());
+                jsonObject.put("ip_address", deviceInformation.getIp_Address());
+                jsonObject.put("mac_address", deviceInformation.getMac_Address());
+                jsonObject.put("memory", deviceInformation.getStorage_memory());
+                jsonObject.put("ram", deviceInformation.getRam());
+                jsonObject.put("device_token", deviceInformation.getDevice_Token());
+                jsonObject.put("wifi_status", deviceInformation.getWifi_status());
+                jsonObject.put("updated_at", deviceInformation.getUpdated_at());
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.INSERT_DEVICE_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            String res = jsonObject.getString("status");
+                            if (res.equals("201")) {
+                                Log.d("Success: ", "Device details inserted");
+                            }
+                        } catch (JSONException je) {
+                            je.printStackTrace();
                         }
-                    } catch (JSONException je) {
-                        je.printStackTrace();
                     }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.d("onErrorResponse: ", error.toString());
-                }
-            }) {
-                @Override
-                public Map<String, String> getHeaders() throws AuthFailureError {
-                    Map<String, String> parameter = new HashMap<>();
-                    parameter.put("Content-Type", "application/json");
-                    return parameter;
-                }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Failure: ", "Device details not inserted");
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> parameter = new HashMap<>();
+                        parameter.put("Content-Type", "application/json");
+                        return parameter;
+                    }
 
-                @Override
-                public byte[] getBody() throws AuthFailureError {
-                    try {
-                        return request == null ? null : request.getBytes("utf-8");
-                    } catch (UnsupportedEncodingException uee) {
-                        VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
-                        return null;
+                    @Override
+                    public byte[] getBody() throws AuthFailureError {
+                        try {
+                            return request == null ? null : request.getBytes("utf-8");
+                        } catch (UnsupportedEncodingException uee) {
+                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
+                            return null;
+                        }
                     }
-                }
-            };
-            queue.add(stringRequest);
-        } catch (JSONException je) {
-            je.printStackTrace();
+                };
+                queue.add(stringRequest);
+            } catch (JSONException je) {
+                je.printStackTrace();
+            }
+        } else {
+            Log.d("Network Status", "Not connected");
+        }
+    }
+
+    public void updateDevice(final DeviceInformation deviceInformation) {
+        if (isNetworkConnected()) {
+            String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("device_name", deviceInformation.getDevice_name());
+                jsonObject.put("device_group", deviceInformation.getDevice_group());
+                jsonObject.put("latitude", deviceInformation.getLatitudes());
+                jsonObject.put("longitude", deviceInformation.getLongitudes());
+                jsonObject.put("box_name", deviceInformation.getBox_Name());
+                jsonObject.put("box_android", deviceInformation.getAndroid_version());
+                jsonObject.put("box_api", deviceInformation.getDevice_Api_version());
+                jsonObject.put("device_locked", deviceInformation.getDevice_locked_status());
+                jsonObject.put("hdmi_status", deviceInformation.getHdmi_status());
+                jsonObject.put("default_apk_version", deviceInformation.getDefault_apk_version());
+                jsonObject.put("taglock_version", deviceInformation.getTaglock_version());
+                jsonObject.put("app_download_status", deviceInformation.getApp_download_status());
+                jsonObject.put("taglock_download_status", deviceInformation.getTaglock_download_status());
+                jsonObject.put("ip_address", deviceInformation.getIp_Address());
+                jsonObject.put("mac_address", deviceInformation.getMac_Address());
+                jsonObject.put("memory", deviceInformation.getStorage_memory());
+                jsonObject.put("ram", deviceInformation.getRam());
+                jsonObject.put("device_token", deviceInformation.getDevice_Token());
+                jsonObject.put("wifi_status", deviceInformation.getWifi_status());
+                jsonObject.put("updated_at", String.valueOf(System.currentTimeMillis() / 1000));
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.UPDATE_DEVICE_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            String res = jsonObject.getString("status");
+                            if (res.equals("200")) {
+                                Log.d("Success: ", "Device details updated");
+                            } else {
+                                Log.d("Failure: ", "Device details not updated");
+                            }
+                        } catch (JSONException je) {
+                            je.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("onErrorResponse: ", error.toString());
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> parameter = new HashMap<>();
+                        parameter.put("Content-Type", "application/json");
+                        return parameter;
+                    }
+
+                    @Override
+                    public byte[] getBody() throws AuthFailureError {
+                        try {
+                            return request == null ? null : request.getBytes("utf-8");
+                        } catch (UnsupportedEncodingException uee) {
+                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
+                            return null;
+                        }
+                    }
+                };
+                queue.add(stringRequest);
+            } catch (JSONException je) {
+                je.printStackTrace();
+            }
+        } else {
+            Log.d("Network Status", "Not connected");
         }
     }
 
@@ -518,11 +582,11 @@ public class TaglockDeviceInfo {
         localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
         localLayoutParams.gravity = Gravity.TOP;
         localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-        // this is to enable the notification to receive touch events
-        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+                // this is to enable the notification to receive touch events
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
 
-        // Draws over status bar
-        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+                // Draws over status bar
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
 
         localLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
         localLayoutParams.height = (int) (20 * context.getResources()
@@ -532,9 +596,9 @@ public class TaglockDeviceInfo {
     }
 
     public void showStatusBar() {
-        windowManager.removeView(view);
         windowManager = (WindowManager) context.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         view = new customViewGroup(context);
+        windowManager.removeView(view);
     }
 
     public class customViewGroup extends ViewGroup {
@@ -565,25 +629,25 @@ public class TaglockDeviceInfo {
         View view = ((Activity) context).getLayoutInflater().inflate(R.layout.alert_dialog, null);
         final EditText alertEdit = view.findViewById(R.id.alertEdit);
         final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-                alert.setTitle("Enter Passcode")
+        alert.setTitle("Enter Passcode")
                 .setMessage("Are you sure you want to exit?")
                 .setView(view)
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (TextUtils.isEmpty(alertEdit.getText())){
+                        if (TextUtils.isEmpty(alertEdit.getText())) {
                             alertEdit.setError("Please enter passcode");
-                        }else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
+                        } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
                             superClass.showNavToggle();
                             PreferenceHelper.setValueBoolean(context, AppConfig.IS_ACTIVE, false);
                             deviceInformation.setDevice_locked_status(false);
                             deviceInfoController.updateTaglockStatus(PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME), false);
                             updateDevice(deviceInformation);
-                            String packageName = PreferenceHelper.getValueString(context,AppConfig.DEVICE_LAUNCHER);
+                            String packageName = PreferenceHelper.getValueString(context, AppConfig.DEVICE_LAUNCHER);
                             superClass.unHideDefaultLauncher(packageName);
                             SuperClass.disableActivity(context);
                             ((Activity) context).finishAndRemoveTask();
-                        }else {
+                        } else {
                             alertEdit.setError("Passcode is incorrect");
                         }
                     }
@@ -597,7 +661,7 @@ public class TaglockDeviceInfo {
         final AlertDialog dialog = alert.create();
         dialog.show();
 
-        final Handler handler  = new Handler();
+        final Handler handler = new Handler();
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -633,16 +697,10 @@ public class TaglockDeviceInfo {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         int pass = Integer.parseInt(alertEdit.getText().toString());
-                        if (TextUtils.isEmpty(alertEdit.getText())){
+                        if (TextUtils.isEmpty(alertEdit.getText())) {
                             alertEdit.setError("Please enter passcode");
-                        }else if (pass == clearPass) {
+                        } else if (pass == clearPass) {
                             SuperClass.clearData();
-                            File dir = new File(Environment.getExternalStorageDirectory() + "/tagloy/");
-                            if (deleteDir(dir)) {
-                                Log.e("Deleted", "");
-                            } else {
-                                Log.e("Not Deleted", "");
-                            }
                             dialog.cancel();
                         } else {
                             alertEdit.setError("Passcode is incorrect");
@@ -658,7 +716,7 @@ public class TaglockDeviceInfo {
         final AlertDialog dialog = alert.create();
         dialog.show();
 
-        final Handler handler  = new Handler();
+        final Handler handler = new Handler();
         final Runnable runnable = new Runnable() {
             @Override
             public void run() {
