@@ -109,7 +109,12 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm clear " + packageName});
             File dir = new File(Environment.getExternalStorageDirectory() + "/tagloy/");
-            deleteDir(dir);
+            File dir1 = new File(Environment.getExternalStorageDirectory() + "/.tagsignage/");
+            if (dir.exists()){
+                deleteDir(dir);
+            }else if (dir1.exists()){
+                deleteDir(dir1);
+            }
             root.waitFor();
         }catch (IOException ie){
             ie.printStackTrace();
@@ -177,6 +182,18 @@ public class SuperClass {
     public void enableUnknownSource(){
         try{
             Process root = Runtime.getRuntime().exec(new String[]{"su","-c","settings put secure install_non_market_apps 1"});
+            root.waitFor();
+        }catch (IOException ie){
+            ie.printStackTrace();
+        }catch (InterruptedException ine){
+            ine.printStackTrace();
+        }
+    }
+
+    //To enable write secure settings
+    public void enableWriteSettings(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.WRITE_SECURE_SETTINGS"});
             root.waitFor();
         }catch (IOException ie){
             ie.printStackTrace();

@@ -41,7 +41,7 @@ import com.tagloy.taglock.utils.TaglockDeviceInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdminActivity extends AppCompatActivity implements View.OnClickListener {
+public class AdminActivity extends AppCompatActivity {
 
     DevicePolicyManager devicePolicyManager;
     ComponentName devicePolicyAdmin;
@@ -55,7 +55,7 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     private static final int REQUEST_APP_NOTIFICATION = 103;
     private static final int REQUEST_SYSTEM_ALERT = 105;
     private static final int REQUEST_WRITE_SETTING = 106;
-    private static final int REQUEST_OVERLAY = 120;
+    private static final int REQUEST_OVERLAY = 16;
     private static final int REQUEST_SETTING = 123;
     private static final int REQUEST_NOTIFICATION = 130;
     private static final int REQUEST_PERMISSIONS = 131;
@@ -80,31 +80,35 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         permissionsAdapter = new PermissionsAdapter(this, permissions);
         SuperClass.grantRoot();
         superClass.enableUnknownSource();
-        if (Build.VERSION.SDK_INT>=23)
-            taglockDeviceInfo.hideStatusBar();
-        taglockDeviceInfo.applyProfile();
+        superClass.enableWriteSettings(getPackageName());
         permissionListView = findViewById(R.id.permissionsList);
         View footerView = ((LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.footer_layout,null,false);
         grantButton = footerView.findViewById(R.id.grantButton);
-        boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
-        boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-        boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
-        boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
-        boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (phone && location && contacts && camera && storage){
-            grantButton.setClickable(false);
-        }else {
-            grantButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (Build.VERSION.SDK_INT >= 23) {
-                        requestPermissions();
+        if (isMyPolicyActive()) {
+            boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
+            boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+            boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
+            boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
+            boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (phone && location && contacts && camera && storage) {
+                grantButton.setClickable(false);
+                PreferenceHelper.setValueBoolean(this, AppConfig.IS_ACTIVE, true);
+                SuperClass.enableActivity(AdminActivity.this);
+                Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
+                startActivity(intent);
+            } else {
+                grantButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (Build.VERSION.SDK_INT >= 23) {
+                            requestPermissions();
+                        }
                     }
-                }
-            });
+                });
+            }
+        } else {
+            Toast.makeText(AdminActivity.this, "Please grant admin permission", Toast.LENGTH_SHORT).show();
         }
-        PreferenceHelper.setValueBoolean(this, AppConfig.APK_DOWN_STATUS,false);
-        PreferenceHelper.setValueBoolean(this,AppConfig.TAGLOCK_DOWN_STATUS,true);
         permissionListView.addFooterView(footerView);
         submitPermission = findViewById(R.id.submitPermission);
         submitPermission.setClickable(false);
@@ -113,11 +117,10 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-        }
+    protected void onResume() {
+        super.onResume();
+        permissionsAdapter.notifyDataSetChanged();
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -166,11 +169,8 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
                     boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
                     if (phone && location && contacts && camera && storage){
                         SuperClass.enableActivity(AdminActivity.this);
-                        Intent intent = new Intent(Intent.ACTION_MAIN);
-                        intent.addCategory(Intent.CATEGORY_HOME);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        Intent intent = new Intent(AdminActivity.this,NetworkActivity.class);
                         startActivity(intent);
-                        finish();
                     }else {
                         Toast.makeText(AdminActivity.this,"Please grant all permissions! Click on GRANT.",Toast.LENGTH_SHORT).show();
                     }
@@ -290,8 +290,10 @@ public class AdminActivity extends AppCompatActivity implements View.OnClickList
         permission = new Permissions("Install From Unknown Sources", getResources().getString(R.string.unknown_source), getDrawable(R.drawable.ic_file_download_black_24dp));
         permissions.add(permission);
 
-        permission = new Permissions("Enable Overlay Permission", getResources().getString(R.string.overlay_permission), getDrawable(R.drawable.ic_block_black_24dp));
-        permissions.add(permission);
+        if (Build.VERSION.SDK_INT >= 23) {
+            permission = new Permissions("Enable Overlay Permission", getResources().getString(R.string.overlay_permission), getDrawable(R.drawable.ic_block_black_24dp));
+            permissions.add(permission);
+        }
 
         permission = new Permissions("Enable Write System Settings", getResources().getString(R.string.write_system), getDrawable(R.drawable.ic_settings_black_24dp));
         permissions.add(permission);

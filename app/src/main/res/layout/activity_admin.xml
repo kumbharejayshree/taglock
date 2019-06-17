@@ -22,79 +22,90 @@
             android:layout_weight="0.3"
             android:background="@color/colorPrimary"
             android:gravity="center"
-            android:text="DEVICE NAME"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.05"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:text=">"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.3"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:text="GROUP NAME"
-            android:textColor="@android:color/white"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.05"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:text=">"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.3"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
             android:text="PERMISSIONS"
             android:textColor="@android:color/white"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.05"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text=">"
+            android:textColor="#bdbdbd" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text="NETWORK"
+            android:textColor="#bdbdbd"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.05"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text=">"
+            android:textColor="#bdbdbd" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text="DEVICE DETAILS"
+            android:textColor="#bdbdbd"
+            android:textStyle="bold" />
+
     </LinearLayout>
 
-    <RelativeLayout
+    <TextView
+        android:id="@+id/warningText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="@string/permission"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="18sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <ListView
             android:id="@+id/permissionsList"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@id/submitPermission"
+            android:layout_height="0dp"
+            android:layout_weight="0.8"
             android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
             android:layout_marginRight="10dp" />
 
         <ImageView
             android:id="@+id/divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_below="@id/permissionsList"
-            android:background="#bdbdbd" />
+            android:background="#bdbdbd"
+            tools:ignore="ContentDescription" />
 
         <TextView
             android:id="@+id/submitPermission"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
+            android:layout_height="0dp"
+            android:layout_weight="0.05"
             android:gravity="end"
-            android:padding="10dp"
+            android:padding="5dp"
             android:text="Next    >"
             android:textSize="18sp" />
 
-    </RelativeLayout>
+    </LinearLayout>
 
 </LinearLayout>

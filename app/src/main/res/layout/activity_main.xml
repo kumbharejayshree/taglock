@@ -5,12 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000"
+    android:id="@+id/mainLayout"
     tools:context=".activity.MainActivity">
 
-    <ProgressBar
+    <pl.droidsonroids.gif.GifImageView
         android:id="@+id/downloadProgress"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:src="@drawable/download72"
+        android:layout_centerHorizontal="true"
         android:visibility="gone"/>
     <GridView
         android:id="@+id/appsGrid"

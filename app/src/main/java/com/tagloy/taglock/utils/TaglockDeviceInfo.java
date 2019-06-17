@@ -1,5 +1,6 @@
 package com.tagloy.taglock.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -38,8 +39,6 @@ import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.tagloy.taglock.R;
-import com.tagloy.taglock.activity.AdminActivity;
-import com.tagloy.taglock.activity.DeviceGroupActivity;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmcontrollers.DeviceInfoController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
@@ -50,13 +49,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,9 +114,24 @@ public class TaglockDeviceInfo {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         Integer ip = wifiInfo.getIpAddress();
-        int speed = wifiInfo.getRssi();
-        Log.d("Speed: ", String.valueOf(speed));
         return ip;
+    }
+
+    public String getIp(){
+        String ipAddress = null;
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        ipAddress = inetAddress.getHostAddress();
+                        return ipAddress;
+                    }
+                }
+            }
+        } catch (SocketException ex) {}
+        return null;
     }
 
     public static String getMACAddress(String interfaceName) {
@@ -193,8 +211,9 @@ public class TaglockDeviceInfo {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         PreferenceHelper.setValueString(context, AppConfig.DEVICE_NAME, deviceName);
-                        Intent intent = new Intent(context, DeviceGroupActivity.class);
-                        intent.putExtra("device_name", deviceName);
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.addCategory(Intent.CATEGORY_HOME);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intent);
                     }
                 }) {
@@ -224,11 +243,11 @@ public class TaglockDeviceInfo {
         }
     }
 
-    public void checkGroupKey(final String groupName, final String groupKey) {
+    public void checkGroupKey(final String deviceName, final String groupId, final String groupKey) {
         if (isNetworkConnected()) {
             try {
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("group_name", groupName);
+                jsonObject.put("group_id", groupId);
                 jsonObject.put("group_key", groupKey);
                 final String request = jsonObject.toString();
                 RequestQueue queue = Volley.newRequestQueue(context);
@@ -239,9 +258,8 @@ public class TaglockDeviceInfo {
                             JSONObject name = new JSONObject(response);
                             String status = name.getString("status");
                             if (status.equals("200")) {
-                                PreferenceHelper.setValueString(context, AppConfig.DEVICE_GROUP, groupName);
-                                Intent intent = new Intent(context, AdminActivity.class);
-                                context.startActivity(intent);
+                                PreferenceHelper.setValueString(context, AppConfig.GROUP_ID, groupId);
+                                checkNameValidity(deviceName);
                             } else if (status.equals("404")) {
                                 Toast.makeText(context, "Group key is invalid. Please check!", Toast.LENGTH_LONG).show();
                             }
@@ -281,15 +299,140 @@ public class TaglockDeviceInfo {
         }
     }
 
+    public void getGroup(String groupId){
+        if (isNetworkConnected()) {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("group_id", groupId);
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GROUP_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject name = new JSONObject(response);
+                            String groupName = name.getString("group_name");
+                            PreferenceHelper.setValueString(context, AppConfig.DEVICE_GROUP, groupName);
+                            applyProfile(groupName);
+                        } catch (JSONException je) {
+                            je.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("API", "Error");
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> parameter = new HashMap<>();
+                        parameter.put("Content-Type", "application/json");
+                        return parameter;
+                    }
+
+                    @Override
+                    public byte[] getBody() throws AuthFailureError {
+                        try {
+                            return request == null ? null : request.getBytes("utf-8");
+                        } catch (UnsupportedEncodingException uee) {
+                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
+                            return null;
+                        }
+                    }
+                };
+                queue.add(stringRequest);
+            } catch (JSONException je) {
+                je.printStackTrace();
+            }
+        } else {
+            Toast.makeText(context, "Please check network connection", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void getCreds(){
+        if (isNetworkConnected()) {
+            try {
+                String device_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("device_name", device_name);
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.CREDENTIALS_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject name = new JSONObject(response);
+                            String username = name.getString("username");
+                            String password = name.getString("password");
+                            String data = username + "\n" + password;
+                            createFile(data);
+                        } catch (JSONException je) {
+                            je.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("API", "Error");
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> parameter = new HashMap<>();
+                        parameter.put("Content-Type", "application/json");
+                        return parameter;
+                    }
+
+                    @Override
+                    public byte[] getBody() throws AuthFailureError {
+                        try {
+                            return request == null ? null : request.getBytes("utf-8");
+                        } catch (UnsupportedEncodingException uee) {
+                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
+                            return null;
+                        }
+                    }
+                };
+                queue.add(stringRequest);
+            } catch (JSONException je) {
+                je.printStackTrace();
+            }
+        } else {
+            Toast.makeText(context, "Please check network connection", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void createFile(String sBody) {
+        try {
+            File root = new File(Environment.getExternalStorageDirectory(), "/taglock/.app");
+            if (!root.exists()) {
+                root.mkdirs();
+            }
+            File gpxfile = new File(root, "appdata");
+            FileWriter writer = new FileWriter(gpxfile);
+            writer.append(sBody);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
     public String checkMemory() {
         StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getPath());
-        long bytesAvailable, bytesTotal;
+        float bytesAvailable, bytesTotal;
         bytesTotal = (statFs.getBlockSizeLong() * statFs.getBlockCountLong());
         bytesAvailable = statFs.getBlockSizeLong() * statFs.getAvailableBlocksLong();
-        long bytesUsed = (bytesTotal - bytesAvailable) / (1024 * 1024);
-        long total = bytesTotal / (1024 * 1024);
-        String memory = bytesUsed + "/" + total + "MB";
-        Log.d("Available memory: ", memory);
+        float free = bytesAvailable / (1024 * 1024 * 1024);
+        float used = (bytesTotal - bytesAvailable) / (1024 * 1024);
+        float total = bytesTotal / (1024 * 1024 * 1024);
+        String freeMemory = String.format("%.02f",free);
+        String usedMemory = String.format("%.02f",used);
+        String totalMemory = String.format("%.02f",total);
+        String memory = usedMemory + "MB/" + freeMemory + "GB/" + totalMemory + "GB";
+        Log.d("Memory",memory);
         return memory;
     }
 
@@ -350,11 +493,10 @@ public class TaglockDeviceInfo {
         return IST;
     }
 
-    public void applyProfile() {
+    public void applyProfile(String group_name) {
         if (isNetworkConnected()){
             final DefaultProfileController defaultProfileController = new DefaultProfileController();
             final DefaultProfile defaultProfile = new DefaultProfile();
-            String group_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
             try{
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("group_name", group_name);
@@ -436,7 +578,8 @@ public class TaglockDeviceInfo {
                 jsonObject.put("app_download_status", deviceInformation.getApp_download_status());
                 jsonObject.put("taglock_download_status", deviceInformation.getTaglock_download_status());
                 jsonObject.put("ip_address", deviceInformation.getIp_Address());
-                jsonObject.put("mac_address", deviceInformation.getMac_Address());
+                jsonObject.put("wifimac_address", deviceInformation.getWifimac_Address());
+                jsonObject.put("lanmac_address", deviceInformation.getLanimac_Address());
                 jsonObject.put("memory", deviceInformation.getStorage_memory());
                 jsonObject.put("ram", deviceInformation.getRam());
                 jsonObject.put("device_token", deviceInformation.getDevice_Token());
@@ -491,7 +634,6 @@ public class TaglockDeviceInfo {
 
     public void updateDevice(final DeviceInformation deviceInformation) {
         if (isNetworkConnected()) {
-            String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
             try {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("device_name", deviceInformation.getDevice_name());
@@ -508,7 +650,8 @@ public class TaglockDeviceInfo {
                 jsonObject.put("app_download_status", deviceInformation.getApp_download_status());
                 jsonObject.put("taglock_download_status", deviceInformation.getTaglock_download_status());
                 jsonObject.put("ip_address", deviceInformation.getIp_Address());
-                jsonObject.put("mac_address", deviceInformation.getMac_Address());
+                jsonObject.put("wifimac_address", deviceInformation.getWifimac_Address());
+                jsonObject.put("lanmac_address", deviceInformation.getLanimac_Address());
                 jsonObject.put("memory", deviceInformation.getStorage_memory());
                 jsonObject.put("ram", deviceInformation.getRam());
                 jsonObject.put("device_token", deviceInformation.getDevice_Token());
@@ -563,10 +706,10 @@ public class TaglockDeviceInfo {
         }
     }
 
-    public String getVersion(String packageName) {
+    public static String getVersion(Context context1,String packageName) {
         String versionName = "";
         try {
-            PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
+            PackageInfo packageInfo = context1.getPackageManager().getPackageInfo(packageName, 0);
             versionName = packageInfo.versionName;
         } catch (PackageManager.NameNotFoundException pe) {
             pe.printStackTrace();
@@ -623,62 +766,16 @@ public class TaglockDeviceInfo {
         final DeviceInfoController deviceInfoController = new DeviceInfoController();
         final DeviceInformation deviceInformation = new DeviceInformation();
         superClass = new SuperClass(context);
-        final DefaultProfileController defaultProfileController = new DefaultProfileController();
-        final RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
-        final int passcode = getProfile.get(0).getPasscode();
-        View view = ((Activity) context).getLayoutInflater().inflate(R.layout.alert_dialog, null);
-        final EditText alertEdit = view.findViewById(R.id.alertEdit);
-        final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-        alert.setTitle("Enter Passcode")
-                .setMessage("Are you sure you want to exit?")
-                .setView(view)
-                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (TextUtils.isEmpty(alertEdit.getText())) {
-                            alertEdit.setError("Please enter passcode");
-                        } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
-                            superClass.showNavToggle();
-                            PreferenceHelper.setValueBoolean(context, AppConfig.IS_ACTIVE, false);
-                            deviceInformation.setDevice_locked_status(false);
-                            deviceInfoController.updateTaglockStatus(PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME), false);
-                            updateDevice(deviceInformation);
-                            String packageName = PreferenceHelper.getValueString(context, AppConfig.DEVICE_LAUNCHER);
-                            superClass.unHideDefaultLauncher(packageName);
-                            SuperClass.disableActivity(context);
-                            ((Activity) context).finishAndRemoveTask();
-                        } else {
-                            alertEdit.setError("Passcode is incorrect");
-                        }
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-        final AlertDialog dialog = alert.create();
-        dialog.show();
-
-        final Handler handler = new Handler();
-        final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (dialog.isShowing()) {
-                    dialog.dismiss();
-                }
-            }
-        };
-
-        alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                handler.removeCallbacks(runnable);
-            }
-        });
-
-        handler.postDelayed(runnable, 30000);
+        final String packageName = PreferenceHelper.getValueString(context, AppConfig.DEVICE_LAUNCHER);
+        final String deviceName = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
+        superClass.showNavToggle();
+        PreferenceHelper.setValueBoolean(context, AppConfig.IS_ACTIVE, false);
+        deviceInformation.setDevice_locked_status(false);
+        deviceInformation.setDevice_name(deviceName);
+        deviceInfoController.updateTaglockStatus(deviceName, false);
+        updateDevice(deviceInformation);
+        superClass.unHideDefaultLauncher(packageName);
+        SuperClass.disableActivity(context);
     }
 
 
@@ -696,14 +793,14 @@ public class TaglockDeviceInfo {
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        int pass = Integer.parseInt(alertEdit.getText().toString());
                         if (TextUtils.isEmpty(alertEdit.getText())) {
-                            alertEdit.setError("Please enter passcode");
-                        } else if (pass == clearPass) {
+                            //alertEdit.setError("Please enter passcode");
+                            Toast.makeText(context, "Please enter passcode", Toast.LENGTH_LONG).show();
+                        } else if (Integer.parseInt(alertEdit.getText().toString()) == clearPass) {
                             SuperClass.clearData();
                             dialog.cancel();
                         } else {
-                            alertEdit.setError("Passcode is incorrect");
+                            Toast.makeText(context, "Passcode is incorrect", Toast.LENGTH_LONG).show();
                         }
                     }
                 })
@@ -714,6 +811,7 @@ public class TaglockDeviceInfo {
                     }
                 });
         final AlertDialog dialog = alert.create();
+        dialog.setCanceledOnTouchOutside(false);
         dialog.show();
 
         final Handler handler = new Handler();

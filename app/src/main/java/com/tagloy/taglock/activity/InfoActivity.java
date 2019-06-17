@@ -1,5 +1,6 @@
 package com.tagloy.taglock.activity;
 
+import android.annotation.SuppressLint;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Environment;
@@ -23,12 +24,14 @@ import io.realm.RealmResults;
 
 public class InfoActivity extends AppCompatActivity {
 
-    TextView deviceNameText,taglockText,appNameText,ipText,macText,storageText;
+    TextView deviceNameText,taglockText,appNameText,ipText,wifiMacText,lanMacText,storageText,connectionText;
     TaglockDeviceInfo taglockDeviceInfo;
     SuperClass superClass;
     ApplicationInfo app;
     PackageManager manager;
     CharSequence appName = "";
+    String ip,versionName;
+    @SuppressLint({"SetTextI18n", "DefaultLocale"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,8 +41,10 @@ public class InfoActivity extends AppCompatActivity {
         deviceNameText = findViewById(R.id.device_name_text);
         taglockText = findViewById(R.id.taglock_text);
         appNameText = findViewById(R.id.appname_text);
+        connectionText = findViewById(R.id.connection_text);
         ipText = findViewById(R.id.ip_text);
-        macText = findViewById(R.id.mac_text);
+        wifiMacText = findViewById(R.id.wifiMac_text);
+        lanMacText = findViewById(R.id.lanMac_text);
         storageText = findViewById(R.id.storage_text);
         manager = getPackageManager();
 
@@ -55,14 +60,13 @@ public class InfoActivity extends AppCompatActivity {
             Log.d("Pack", pack);
             app = manager.getApplicationInfo(pack, PackageManager.GET_META_DATA);
             appName = manager.getApplicationLabel(app);
-            boolean isTagboxInstalled = superClass.appInstalled(pack);
-            String versionName = "";
-            if (isTagboxInstalled){
-                versionName = taglockDeviceInfo.getVersion(pack);
+            boolean isDefaultInstalled = superClass.appInstalled(pack);
+            if (isDefaultInstalled){
+                versionName = TaglockDeviceInfo.getVersion(this,pack);
             }else {
                 versionName = "NULL";
             }
-            String taglockVersion = taglockDeviceInfo.getVersion(getPackageName());
+            String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
             taglockText.setText("Taglock Version: " + taglockVersion);
             appNameText.setText(appName + " Version: " + versionName);
 
@@ -72,31 +76,30 @@ public class InfoActivity extends AppCompatActivity {
             np.printStackTrace();
         }
 
-
+        if (taglockDeviceInfo.isEthernetConnected()){
+            connectionText.append("LAN");
+        }else if (taglockDeviceInfo.isWifiConnected()){
+            connectionText.append("WiFi");
+        }else {
+            connectionText.append("Not connected to internet");
+        }
         String mac = TaglockDeviceInfo.getMACAddress("wlan0");
         String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
-        if (mac.equals("") && macAddressEthernet.equals("")) {
-            mac = "NA";
-        }else if(mac.equals("")){
-            mac = macAddressEthernet;
-        }
-        Integer ipAddress = taglockDeviceInfo.getIpAddress();
-        String ip = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
-        if (ipAddress.equals("")) {
+        if (taglockDeviceInfo.isWifiConnected()){
+            Integer ipAddress = taglockDeviceInfo.getIpAddress();
+            ip = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
+        }else if (taglockDeviceInfo.isEthernetConnected()){
+            ip = taglockDeviceInfo.getIp();
+        }else {
             ip = "NA";
         }
         ipText.setText("IP Address: " + ip);
-        macText.setText("MAC Address: " + mac);
+        wifiMacText.setText("WiFI MAC: " + mac);
+        lanMacText.setText("LAN MAC: " + macAddressEthernet);
 
 
-        StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getPath());
-        long bytesAvailable, bytesTotal;
-        bytesTotal = (statFs.getBlockSizeLong() * statFs.getBlockCountLong());
-        bytesAvailable = statFs.getBlockSizeLong() * statFs.getAvailableBlocksLong();
-        long free = bytesAvailable / (1024 * 1024 * 1024);
-        long used = (bytesTotal - bytesAvailable) / (1024 * 1024);
-        long total = bytesTotal / (1024 * 1024 * 1024);
+        String memory = taglockDeviceInfo.checkMemory();
 
-        storageText.setText("Internal: " + used + "MB/" + free + "GB/" + total + "GB");
+        storageText.setText("Internal: " + memory);
     }
 }

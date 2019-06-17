@@ -11,7 +11,6 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -35,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.realm.RealmResults;
+import pl.droidsonroids.gif.GifImageView;
 
 import static android.content.Context.DOWNLOAD_SERVICE;
 
@@ -43,7 +43,7 @@ public class ApkManagement {
     private Context context;
     private SuperClass superClass;
     private TaglockDeviceInfo taglockDeviceInfo;
-    private ProgressBar progressBar;
+    private GifImageView progressBar;
 
     public ApkManagement(Context context) {
         this.context = context;
@@ -73,7 +73,7 @@ public class ApkManagement {
                             String version = apk.getString("apk_version");
                             if (isTagboxInstalled) {
                                 String versionName = version.replace(".", "");
-                                String installedVersion = (taglockDeviceInfo.getVersion(pack)).replace(".", "");
+                                String installedVersion = (taglockDeviceInfo.getVersion(context,pack)).replace(".", "");
                                 long ver = Long.parseLong(versionName);
                                 long ins = Long.parseLong(installedVersion);
                                 if (ver > ins) {
@@ -145,7 +145,7 @@ public class ApkManagement {
                             String apk_name = apk.getString("apk_name");
                             String version = apk.getString("apk_version");
                             String versionName = version.replace(".", "");
-                            String installedVersion = (taglockDeviceInfo.getVersion(context.getPackageName())).replace(".", "");
+                            String installedVersion = (taglockDeviceInfo.getVersion(context,context.getPackageName())).replace(".", "");
                             long ver = Long.parseLong(versionName);
                             long ins = Long.parseLong(installedVersion);
                             if (ver > ins) {
@@ -203,6 +203,7 @@ public class ApkManagement {
         request.setDestinationInExternalPublicDir(apkPath, uri.getLastPathSegment());
         DownloadManager downloadManager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
         apkId = downloadManager.enqueue(request);
+        PreferenceHelper.setValueString(context,AppConfig.APP_DOWN_ID,String.valueOf(apkId));
         progressBar.setVisibility(View.VISIBLE);
         DownloadManager.Query query = null;
         query = new DownloadManager.Query();
@@ -236,6 +237,7 @@ public class ApkManagement {
         request.setDestinationInExternalPublicDir(taglockPath, uri.getLastPathSegment());
         DownloadManager downloadManager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
         taglockId = downloadManager.enqueue(request);
+        PreferenceHelper.setValueString(context,AppConfig.TAGLOCK_DOWN_ID,String.valueOf(taglockId));
         progressBar.setVisibility(View.VISIBLE);
         DownloadManager.Query query = null;
         query = new DownloadManager.Query();

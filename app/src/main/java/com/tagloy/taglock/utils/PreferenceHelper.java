@@ -9,21 +9,21 @@ public class PreferenceHelper {
         SharedPreferences prefs = context.getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(key, value);
-        editor.commit();
+        editor.apply();
     }
 
     public static void setValueBoolean(Context context, String key, Boolean value) {
         SharedPreferences prefs = context.getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean(key, value);
-        editor.commit();
+        editor.apply();
     }
 
     public static void setValueInt(Context context, String key, int value) {
         SharedPreferences prefs = context.getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putInt(key, value);
-        editor.commit();
+        editor.apply();
     }
 
     public static int getValueInt(Context context, String key) {

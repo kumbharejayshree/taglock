@@ -2,7 +2,7 @@
     <!--App strings-->
     <string name="app_name">TagLock</string>
     <string name="device_name">Device Name</string>
-    <string name="device_group">Device Group</string>
+    <string name="device_detail">Device Details</string>
     <string name="device_info">Device Info</string>
     <string name="wifi_settings">WiFi Settings</string>
     <string name="permissions">Permissions</string>
@@ -17,6 +17,8 @@
     <string name="device_call">What should we call your device?</string>
     <string name="device_des">You can search device using its name from dashboard.(e.g. TL-City Code-Box code)</string>
     <string name="group_key">Enter Group Key*</string>
+    <string name="group_id">Enter Group Id*</string>
+    <string name="permission">These permissions are necessary for Taglock to work properly.</string>
 
     <!--Menu strings-->
     <string name="info">Device Info</string>

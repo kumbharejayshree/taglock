@@ -2,11 +2,16 @@ package com.tagloy.taglock.adapters;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AppOpsManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -99,12 +104,55 @@ public class PermissionsAdapter extends BaseAdapter {
                     }
                 });
             }
+        }else if (position == 1) {
+            if (isAccessGranted()) {
+                finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+                finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+                finalMyViewHolder.permissionCheck.setChecked(true);
+                finalMyViewHolder.permissionCheck.setClickable(false);
+            } else {
+                finalMyViewHolder.permissionGrant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (Build.VERSION.SDK_INT >= 23)
+                            permissionsClass.getPermission(context, (Activity) context, Manifest.permission.PACKAGE_USAGE_STATS, REQUEST_USAGE_ACCESS);
+                    }
+                });
+            }
+        }else if (position == 2) {
+            if (isNotificationAllowed()) {
+                finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+                finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+                finalMyViewHolder.permissionCheck.setChecked(true);
+                finalMyViewHolder.permissionCheck.setClickable(false);
+            } else {
+                finalMyViewHolder.permissionGrant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        permissionsClass.getPermission(context, (Activity) context, Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE, REQUEST_APP_NOTIFICATION);
+                    }
+                });
+            }
         }else if (position == 3){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
             finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
             finalMyViewHolder.permissionCheck.setChecked(true);
             finalMyViewHolder.permissionCheck.setClickable(false);
-        }else if (position == 4){
+        }else if (position == 4) {
+            if (Build.VERSION.SDK_INT >= 23 && Settings.canDrawOverlays(context)) {
+                finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+                finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+                finalMyViewHolder.permissionCheck.setChecked(true);
+                finalMyViewHolder.permissionCheck.setClickable(false);
+            } else {
+                finalMyViewHolder.permissionGrant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        permissionsClass.getPermission(context, (Activity) context, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
+                    }
+                });
+            }
+        }else if (position == 5){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
             finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
             finalMyViewHolder.permissionCheck.setChecked(true);
@@ -138,8 +186,10 @@ public class PermissionsAdapter extends BaseAdapter {
                     if (Build.VERSION.SDK_INT >= 23) {
                         permissionsClass.getPermission(context, (Activity) context, Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE, REQUEST_APP_NOTIFICATION);
                     }
-                }else if (position == 5){
-                    permissionsClass.getPermission(context, (Activity) context, Manifest.permission.WRITE_SECURE_SETTINGS, REQUEST_WRITE_SETTING);
+                }else if (position == 4){
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        permissionsClass.getPermission(context, (Activity) context, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
+                    }
                 }
             }
         });
@@ -157,6 +207,32 @@ public class PermissionsAdapter extends BaseAdapter {
         devicePolicyManager = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
         devicePolicyAdmin = new ComponentName(context, TaglockAdminReceiver.class);
         return devicePolicyManager.isAdminActive(devicePolicyAdmin);
+    }
+
+    private boolean isAccessGranted() {
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(context.getPackageName(), 0);
+            AppOpsManager appOpsManager = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
+            int mode = 0;
+            mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    applicationInfo.uid, applicationInfo.packageName);
+            return (mode == AppOpsManager.MODE_ALLOWED);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private boolean isNotificationAllowed(){
+        ContentResolver contentResolver = context.getContentResolver();
+        String getEnabledListener = Settings.Secure.getString(contentResolver,"enabled_notification_listeners");
+        String packageName = context.getPackageName();
+        if (getEnabledListener == null || !getEnabledListener.contains(packageName)){
+            return false;
+        }else {
+            return true;
+        }
     }
 
 }

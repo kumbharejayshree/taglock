@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#e5e5e5"
     android:orientation="vertical"
-    tools:context=".activity.DeviceNameActivity">
+    tools:context=".activity.NetworkActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,98 +22,76 @@
             android:layout_weight="0.3"
             android:background="@color/colorPrimary"
             android:gravity="center"
-            android:text="DEVICE NAME"
-            android:textStyle="bold"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.05"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:text=">"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.3"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:text="GROUP NAME"
-            android:textStyle="bold"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.05"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:text=">"
-            android:textColor="#bdbdbd" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.3"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
             android:text="PERMISSIONS"
-            android:textColor="#bdbdbd" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="30dp"
-        android:background="@drawable/round_shape"
-        android:orientation="vertical">
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Select group for your device"
+            android:layout_weight="0.05"
+            android:background="@color/colorPrimary"
             android:gravity="center"
-            android:layout_margin="10dp"
-            android:textSize="18sp"/>
-        <Spinner
-            android:id="@+id/groupNameSpinner"
-            android:layout_width="match_parent"
+            android:text=">"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"/>
+            android:layout_weight="0.3"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text="NETWORK"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.05"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text=">"
+            android:textColor="#bdbdbd" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text="DEVICE DETAILS"
+            android:textColor="#bdbdbd"
+            android:textStyle="bold" />
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="30dp"
         android:background="@drawable/round_shape"
         android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/groupKeyEdit"
+        <ListView
+            android:id="@+id/wifiListView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_below="@id/wifiListView"
+            android:background="#bdbdbd" />
+
+        <TextView
+            android:id="@+id/submitNetwork"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"
-            android:hint="@string/group_key"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="30dp"
-        android:orientation="vertical">
-
-        <Button
-            android:id="@+id/submitGroupBtn"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimary"
-            android:textColor="@android:color/white"
-            android:text="Next" />
-    </LinearLayout>
+            android:layout_alignParentBottom="true"
+            android:gravity="end"
+            android:padding="10dp"
+            android:text="Next    >"
+            android:textSize="18sp" />
+    </RelativeLayout>
 
 </LinearLayout>

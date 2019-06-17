@@ -3,6 +3,7 @@ package com.tagloy.taglock;
 import android.app.Application;
 
 import com.crashlytics.android.Crashlytics;
+import com.github.anrwatchdog.ANRWatchDog;
 import com.tagloy.taglock.realm.RealmController;
 import com.facebook.stetho.Stetho;
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
@@ -18,6 +19,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        new ANRWatchDog(25000).setReportMainThreadOnly().start();
         Fabric.with(this, new Crashlytics());
         Realm.init(this);
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()

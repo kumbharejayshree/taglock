@@ -16,7 +16,8 @@ public class DeviceInformation extends RealmObject {
     private Boolean app_download_status;
     private Boolean taglock_download_status;
     private String ip_Address;
-    private String mac_Address;
+    private String wifimac_Address;
+    private String lanimac_Address;
     private String device_Token;
     private String storage_memory;
     private String ram;
@@ -129,12 +130,20 @@ public class DeviceInformation extends RealmObject {
         this.ip_Address = ip_Address;
     }
 
-    public String getMac_Address() {
-        return mac_Address;
+    public String getWifimac_Address() {
+        return wifimac_Address;
     }
 
-    public void setMac_Address(String mac_Address) {
-        this.mac_Address = mac_Address;
+    public void setWifimac_Address(String wifimac_Address) {
+        this.wifimac_Address = wifimac_Address;
+    }
+
+    public String getLanimac_Address() {
+        return lanimac_Address;
+    }
+
+    public void setLanimac_Address(String lanimac_Address) {
+        this.lanimac_Address = lanimac_Address;
     }
 
     public String getDevice_Token() {

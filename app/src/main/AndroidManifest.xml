@@ -63,11 +63,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".activity.DeviceNameActivity"
-            android:configChanges="orientation|screenSize"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTask">
+        <activity android:name=".activity.SplashActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -75,17 +73,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.DeviceGroupActivity"
-            android:configChanges="orientation|screenSize"
-            android:label="@string/device_group"
-            android:launchMode="singleTask"
-            android:parentActivityName=".activity.DeviceNameActivity" />
-        <activity
             android:name=".activity.AdminActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/permissions"
+            android:launchMode="singleTask"/>
+        <activity
+            android:name=".activity.NetworkActivity"
+            android:configChanges="orientation|screenSize"
+            android:excludeFromRecents="true"
             android:launchMode="singleTask"
-            android:parentActivityName=".activity.DeviceGroupActivity" />
+            android:parentActivityName=".activity.AdminActivity"/>
+        <activity
+            android:name=".activity.DeviceDetailActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/device_detail"
+            android:launchMode="singleTask"
+            android:parentActivityName=".activity.NetworkActivity" />
         <activity
             android:name=".activity.MainActivity"
             android:clearTaskOnLaunch="true"
@@ -106,7 +108,7 @@
         <activity
             android:name=".activity.InfoActivity"
             android:label="@string/device_info"
-            android:parentActivityName=".activity.MainActivity"/>
+            android:parentActivityName=".activity.MainActivity" />
         <activity
             android:name=".activity.WifiActivity"
             android:configChanges="orientation|screenSize"

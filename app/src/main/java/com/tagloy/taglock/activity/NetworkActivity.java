@@ -3,18 +3,26 @@ package com.tagloy.taglock.activity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -24,14 +32,21 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.adapters.WifiListAdapter;
+import com.tagloy.taglock.utils.AppConfig;
+import com.tagloy.taglock.utils.PermissionsClass;
+import com.tagloy.taglock.utils.PreferenceHelper;
+import com.tagloy.taglock.utils.SuperClass;
+import com.tagloy.taglock.receiver.TaglockAdminReceiver;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
-public class WifiActivity extends AppCompatActivity {
+import io.fabric.sdk.android.Fabric;
+
+public class NetworkActivity extends AppCompatActivity {
 
     WifiManager wifiManager;
     ListView wifiListView;
@@ -41,6 +56,8 @@ public class WifiActivity extends AppCompatActivity {
     EditText pass;
     List<ScanResult> wifiScanResult;
     TaglockDeviceInfo taglockDeviceInfo;
+    Context mContext;
+    TextView submitNetwork;
 
     public ScanResult getItem(int position){
         return wifiScanResult.get(position);
@@ -48,7 +65,9 @@ public class WifiActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_wifi);
+        setContentView(R.layout.activity_network);
+        mContext = this;
+        submitNetwork = findViewById(R.id.submitNetwork);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         if (Build.VERSION.SDK_INT>=23)
             taglockDeviceInfo.hideStatusBar();
@@ -65,15 +84,38 @@ public class WifiActivity extends AppCompatActivity {
                 connectToWifi(ssid);
             }
         });
-        wifiManager.startScan();
-        if (!wifiManager.isWifiEnabled()){
-            Toast.makeText(this,"WiFi is disabled, Turning it on", Toast.LENGTH_LONG).show();
-            wifiManager.setWifiEnabled(true);
+        String device_name = PreferenceHelper.getValueString(this,AppConfig.DEVICE_NAME);
+        if (!device_name.equals("")){
+            Intent intent = new Intent(NetworkActivity.this,MainActivity.class);
+            startActivity(intent);
+            finish();
         }
+        if (taglockDeviceInfo.isNetworkConnected()){
+            submitNetwork.setTextColor(getResources().getColor(R.color.tagColor));
+        }
+        wifiManager.startScan();
+        if (!taglockDeviceInfo.isEthernetConnected()){
+            if (!wifiManager.isWifiEnabled()){
+                Toast.makeText(this,"WiFi is disabled, Turning it on", Toast.LENGTH_LONG).show();
+                wifiManager.setWifiEnabled(true);
+                wifiManager.startScan();
+            }
+        }
+        submitNetwork.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (taglockDeviceInfo.isNetworkConnected()){
+                    Intent intent = new Intent(NetworkActivity.this,DeviceDetailActivity.class);
+                    startActivity(intent);
+                }else {
+                    Toast.makeText(mContext,"Please connect to the network", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
         registerReceiver(wifiScanReceiver,new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
     }
 
-    class WifiScanReceiver extends BroadcastReceiver{
+    class WifiScanReceiver extends BroadcastReceiver {
         @SuppressLint("UseValueOf")
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -95,7 +137,7 @@ public class WifiActivity extends AppCompatActivity {
                 wifiListAdapter = new WifiListAdapter(context,wifiScanResult);
                 wifiListView.setAdapter(wifiListAdapter);
             }else {
-                Toast.makeText(WifiActivity.this,"No wifi results found", Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext,"No wifi results found", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -133,6 +175,7 @@ public class WifiActivity extends AppCompatActivity {
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.connect);
         dialog.setTitle("Connect to Network");
+        submitNetwork.setTextColor(getResources().getColor(R.color.tagColor));
         TextView textSSID = dialog.findViewById(R.id.textSSID1);
 
         final WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -149,7 +192,7 @@ public class WifiActivity extends AppCompatActivity {
                 String checkPassword = pass.getText().toString();
                 finallyConnect(checkPassword, wifiSSID);
                 dialog.dismiss();
-                Toast.makeText(WifiActivity.this,"Connected to Network: " + wifiSSID, Toast.LENGTH_LONG).show();
+                Toast.makeText(NetworkActivity.this,"Connected to Network: " + wifiSSID, Toast.LENGTH_LONG).show();
             }
         });
         dialog.show();

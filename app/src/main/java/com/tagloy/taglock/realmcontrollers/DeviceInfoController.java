@@ -66,7 +66,6 @@ public class DeviceInfoController {
 
         DeviceInformation mDeviceInformation = getDeviceData(device_name);
         //realm.where(DeviceInformation.class).equalTo("device_name",device_name).findFirst();
-        mDeviceInformation.setDevice_name(deviceInformation.getDevice_name());
         mDeviceInformation.setLatitudes(deviceInformation.getLatitudes());
         mDeviceInformation.setLongitudes(deviceInformation.getLongitudes());
         mDeviceInformation.setDevice_group(deviceInformation.getDevice_group());
@@ -79,7 +78,8 @@ public class DeviceInfoController {
         mDeviceInformation.setApp_download_status(deviceInformation.getApp_download_status());
         mDeviceInformation.setTaglock_download_status(deviceInformation.getTaglock_download_status());
         mDeviceInformation.setIp_Address(deviceInformation.getIp_Address());
-        mDeviceInformation.setMac_Address(deviceInformation.getMac_Address());
+        mDeviceInformation.setWifimac_Address(deviceInformation.getWifimac_Address());
+        mDeviceInformation.setLanimac_Address(deviceInformation.getLanimac_Address());
         mDeviceInformation.setDevice_Token(deviceInformation.getDevice_Token());
         mDeviceInformation.setStorage_memory(deviceInformation.getStorage_memory());
         mDeviceInformation.setRam(deviceInformation.getRam());

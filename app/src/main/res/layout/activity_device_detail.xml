@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#e5e5e5"
     android:orientation="vertical"
-    tools:context=".activity.DeviceNameActivity">
+    tools:context=".activity.NetworkActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,27 +22,28 @@
             android:layout_weight="0.3"
             android:background="@color/colorPrimary"
             android:gravity="center"
-            android:text="DEVICE NAME"
-            android:textStyle="bold"
+            android:text="PERMISSIONS"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.05"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:text=">"
             android:textColor="@android:color/white" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.05"
-            android:background="@color/colorPrimary"
-            android:gravity="center"
-            android:text=">"
-            android:textColor="#bdbdbd" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:layout_weight="0.3"
             android:background="@color/colorPrimary"
             android:gravity="center"
-            android:text="GROUP NAME"
-            android:textColor="#bdbdbd" />
+            android:text="NETWORK"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="0dp"
@@ -51,7 +52,7 @@
             android:background="@color/colorPrimary"
             android:gravity="center"
             android:text=">"
-            android:textColor="#bdbdbd" />
+            android:textColor="@android:color/white" />
 
         <TextView
             android:layout_width="0dp"
@@ -59,8 +60,27 @@
             android:layout_weight="0.3"
             android:background="@color/colorPrimary"
             android:gravity="center"
-            android:text="PERMISSIONS"
-            android:textColor="#bdbdbd" />
+            android:text="DEVICE DETAILS"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/round_shape"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/deviceNameEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/device_name_hint"
+            android:text="" />
     </LinearLayout>
 
     <LinearLayout
@@ -70,30 +90,28 @@
         android:background="@drawable/round_shape"
         android:orientation="vertical">
 
-        <TextView
+        <EditText
+            android:id="@+id/groupIdEdit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:gravity="center"
-            android:text="@string/device_call"
-            android:textColor="#000"
-            android:textSize="20sp" />
+            android:hint="@string/group_id"
+            android:inputType="number" />
+    </LinearLayout>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="@string/device_des"
-            android:textColor="#bdbdbd"
-            android:textSize="18sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/round_shape"
+        android:orientation="vertical">
 
         <EditText
-            android:id="@+id/deviceNameEdit"
+            android:id="@+id/groupKeyEdit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="@string/device_name_text"
-            android:hint="@string/device_name_hint" />
+            android:hint="@string/group_key"
+            android:inputType="textPassword" />
     </LinearLayout>
 
     <LinearLayout
@@ -103,12 +121,12 @@
         android:orientation="vertical">
 
         <Button
-            android:id="@+id/submitNameBtn"
+            android:id="@+id/submitGroupBtn"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/colorPrimary"
-            android:textColor="@android:color/white"
-            android:text="@string/next_button" />
+            android:text="Next"
+            android:textColor="@android:color/white" />
     </LinearLayout>
 
 </LinearLayout>

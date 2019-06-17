@@ -13,15 +13,13 @@ import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
 public class HdmiListener extends BroadcastReceiver {
-
-
     TaglockDeviceInfo taglockDeviceInfo;
     boolean state = true;
     @Override
     public void onReceive(Context context, Intent intent) {
-        final DeviceInfoController deviceInfoController = new DeviceInfoController();
         final DeviceInformation deviceInformation = new DeviceInformation();
         taglockDeviceInfo = new TaglockDeviceInfo(context);
+        String deviceName = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
         String action = intent.getAction();
         String HDMIINTENT = "android.intent.action.HDMI_PLUGGED";
         if (action.equals(HDMIINTENT)){
@@ -34,7 +32,7 @@ public class HdmiListener extends BroadcastReceiver {
                 Toast.makeText(context,"HDMI disconnected",Toast.LENGTH_LONG).show();
             }
             deviceInformation.setHdmi_status(state);
-            deviceInfoController.updateHDMI(PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME),state);
+            deviceInformation.setDevice_name(deviceName);
             taglockDeviceInfo.updateDevice(deviceInformation);
         }
     }
