@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.tagloy.taglock">
 
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -63,9 +62,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.SplashActivity"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:excludeFromRecents="true">
+        <activity
+            android:name=".activity.SplashActivity"
+            android:excludeFromRecents="true"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -75,13 +75,13 @@
         <activity
             android:name=".activity.AdminActivity"
             android:configChanges="orientation|screenSize"
-            android:launchMode="singleTask"/>
+            android:launchMode="singleTask" />
         <activity
             android:name=".activity.NetworkActivity"
             android:configChanges="orientation|screenSize"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
-            android:parentActivityName=".activity.AdminActivity"/>
+            android:parentActivityName=".activity.AdminActivity" />
         <activity
             android:name=".activity.DeviceDetailActivity"
             android:configChanges="orientation|screenSize"
@@ -93,7 +93,8 @@
             android:clearTaskOnLaunch="true"
             android:configChanges="orientation|screenSize"
             android:excludeFromRecents="true"
-            android:immersive="true">
+            android:immersive="true"
+            android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.MAIN" />
@@ -109,6 +110,8 @@
             android:name=".activity.InfoActivity"
             android:label="@string/device_info"
             android:parentActivityName=".activity.MainActivity" />
+
+        <activity android:name=".activity.WebActivity"/>
         <activity
             android:name=".activity.WifiActivity"
             android:configChanges="orientation|screenSize"

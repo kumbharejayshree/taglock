@@ -26,12 +26,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         final RemoteMessage message = remoteMessage;
         final String apk_name = "apkmanagement/" + PreferenceHelper.getValueString(this,AppConfig.APK_NAME);
         final String taglock_apk = "taglockmanagement/" + PreferenceHelper.getValueString(this,AppConfig.TAGLOCK_APK);
+        final boolean apkDown = PreferenceHelper.getValueBoolean(this,AppConfig.APK_DOWN_STATUS);
+        final boolean tagDown = PreferenceHelper.getValueBoolean(this,AppConfig.TAGLOCK_DOWN_STATUS);
         if (remoteMessage.getData().size() > 0) {
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, "Message payload: " + message.getData());
                     //Toast.makeText(getApplicationContext(), "Data: " + message.getData().get("command"), Toast.LENGTH_LONG).show();
                     String command = message.getData().get("command");
                     switch (command) {
@@ -41,17 +42,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         case "shutdown":
                             superClass.shutdownDevice();
                             break;
-                        case "download":
-                            apkManagement.getApk();
-                            break;
-                        case "downloadtag":
-                            apkManagement.getTaglock();
-                            break;
-                        case "install":
-                            new MainActivity.InstallApp(getApplicationContext(),apk_name).execute();
-                            break;
                         case "update":
-                            new MainActivity.UpdateApp(getApplicationContext(),apk_name).execute();
+                            if (apkDown){
+                                new MainActivity.UpdateApp(getApplicationContext(),apk_name).execute();
+                            }else {
+                                apkManagement.getApk();
+                            }
                             break;
                         case "clear":
                             SuperClass.clearData();
@@ -66,7 +62,11 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                             new MainActivity.InstallApp(getApplicationContext(),taglock_apk).execute();
                             break;
                         case "updatetag":
-                            new MainActivity.UpdateApp(getApplicationContext(),taglock_apk).execute();
+                            if (tagDown){
+                                new MainActivity.UpdateTaglock(getApplicationContext(),taglock_apk).execute();
+                            }else {
+                                apkManagement.getTaglock();
+                            }
                             break;
                     }
                 }
@@ -76,7 +76,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(String token) {
-        Log.d(TAG, "New token: " + token);
         FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(new OnSuccessListener<InstanceIdResult>() {
             @Override
             public void onSuccess(InstanceIdResult instanceIdResult) {

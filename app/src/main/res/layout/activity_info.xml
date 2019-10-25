@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:background="#bdbdbd"
             android:gravity="center_horizontal"
-            android:text="Device Name"
+            android:text="@string/device_name"
             android:textSize="18sp" />
 
         <TextView
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:background="#bdbdbd"
             android:gravity="center_horizontal"
-            android:text="Device Status"
+            android:text="@string/device_status"
             android:textSize="18sp" />
 
         <TextView
@@ -72,11 +72,12 @@
         android:orientation="vertical">
 
         <TextView
+            android:id="@+id/connectivity_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#bdbdbd"
             android:gravity="center_horizontal"
-            android:text="Connectivity Details"
+            android:text="@string/connectivity_details"
             android:textSize="18sp" />
 
         <TextView
@@ -125,14 +126,14 @@
             android:layout_height="wrap_content"
             android:background="#bdbdbd"
             android:gravity="center_horizontal"
-            android:text="Storage Details"
+            android:text="@string/storage_details"
             android:textSize="18sp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:text="(Used/Free/Total)"
+            android:text="@string/memory"
             android:textColor="@android:color/black"
             android:textSize="15sp" />
 

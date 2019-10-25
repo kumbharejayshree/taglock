@@ -1,13 +1,12 @@
 package com.tagloy.taglock.activity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Environment;
-import android.os.StatFs;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.tagloy.taglock.R;
@@ -18,13 +17,12 @@ import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.SuperClass;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
-import java.util.Objects;
-
 import io.realm.RealmResults;
 
 public class InfoActivity extends AppCompatActivity {
 
-    TextView deviceNameText,taglockText,appNameText,ipText,wifiMacText,lanMacText,storageText,connectionText;
+    TextView deviceNameText,taglockText,appNameText,ipText,wifiMacText,lanMacText,storageText,connectionText,
+    connectivityText;
     TaglockDeviceInfo taglockDeviceInfo;
     SuperClass superClass;
     ApplicationInfo app;
@@ -42,6 +40,7 @@ public class InfoActivity extends AppCompatActivity {
         taglockText = findViewById(R.id.taglock_text);
         appNameText = findViewById(R.id.appname_text);
         connectionText = findViewById(R.id.connection_text);
+        connectivityText = findViewById(R.id.connectivity_text);
         ipText = findViewById(R.id.ip_text);
         wifiMacText = findViewById(R.id.wifiMac_text);
         lanMacText = findViewById(R.id.lanMac_text);
@@ -57,7 +56,6 @@ public class InfoActivity extends AppCompatActivity {
 
         try {
             String pack = getProfile.get(0).getApp_package_name();
-            Log.d("Pack", pack);
             app = manager.getApplicationInfo(pack, PackageManager.GET_META_DATA);
             appName = manager.getApplicationLabel(app);
             boolean isDefaultInstalled = superClass.appInstalled(pack);
@@ -70,10 +68,8 @@ public class InfoActivity extends AppCompatActivity {
             taglockText.setText("Taglock Version: " + taglockVersion);
             appNameText.setText(appName + " Version: " + versionName);
 
-        }catch (PackageManager.NameNotFoundException ne){
+        }catch (PackageManager.NameNotFoundException | NullPointerException ne){
             ne.printStackTrace();
-        }catch (NullPointerException np){
-            np.printStackTrace();
         }
 
         if (taglockDeviceInfo.isEthernetConnected()){
@@ -87,7 +83,7 @@ public class InfoActivity extends AppCompatActivity {
         String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
         if (taglockDeviceInfo.isWifiConnected()){
             Integer ipAddress = taglockDeviceInfo.getIpAddress();
-            ip = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
+            ip = taglockDeviceInfo.intToIp(ipAddress);
         }else if (taglockDeviceInfo.isEthernetConnected()){
             ip = taglockDeviceInfo.getIp();
         }else {
@@ -101,5 +97,13 @@ public class InfoActivity extends AppCompatActivity {
         String memory = taglockDeviceInfo.checkMemory();
 
         storageText.setText("Internal: " + memory);
+
+        connectivityText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(InfoActivity.this, WebActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 }

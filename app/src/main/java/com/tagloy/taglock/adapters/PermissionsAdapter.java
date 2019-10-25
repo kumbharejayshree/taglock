@@ -159,16 +159,34 @@ public class PermissionsAdapter extends BaseAdapter {
             finalMyViewHolder.permissionCheck.setClickable(false);
         }else if (position==6){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+            finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+            finalMyViewHolder.permissionCheck.setChecked(true);
+            finalMyViewHolder.permissionCheck.setClickable(false);
         }else if (position==7){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+            finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+            finalMyViewHolder.permissionCheck.setChecked(true);
+            finalMyViewHolder.permissionCheck.setClickable(false);
         }else if (position==8){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+            finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+            finalMyViewHolder.permissionCheck.setChecked(true);
+            finalMyViewHolder.permissionCheck.setClickable(false);
         }else if (position==9){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+            finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+            finalMyViewHolder.permissionCheck.setChecked(true);
+            finalMyViewHolder.permissionCheck.setClickable(false);
         }else if (position==10){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+            finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+            finalMyViewHolder.permissionCheck.setChecked(true);
+            finalMyViewHolder.permissionCheck.setClickable(false);
         }else if (position==11){
             finalMyViewHolder.permissionGrant.setVisibility(View.GONE);
+            finalMyViewHolder.permissionCheck.setVisibility(View.VISIBLE);
+            finalMyViewHolder.permissionCheck.setChecked(true);
+            finalMyViewHolder.permissionCheck.setClickable(false);
         }
         myViewHolder.permissionGrant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

@@ -1,13 +1,14 @@
 package com.tagloy.taglock.activity;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
@@ -26,19 +27,22 @@ import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.adapters.WifiListAdapter;
+import com.tagloy.taglock.utils.SuperClass;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 public class WifiActivity extends AppCompatActivity {
 
     WifiManager wifiManager;
+    WifiInfo wifiInfo;
     ListView wifiListView;
     WifiScanReceiver wifiScanReceiver;
     WifiListAdapter wifiListAdapter;
     String wifi[];
     EditText pass;
+    Context mContext;
+    SuperClass superClass;
     List<ScanResult> wifiScanResult;
     TaglockDeviceInfo taglockDeviceInfo;
 
@@ -49,20 +53,44 @@ public class WifiActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifi);
+        mContext = this;
+        superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         if (Build.VERSION.SDK_INT>=23)
             taglockDeviceInfo.hideStatusBar();
         wifiListView = findViewById(R.id.wifiListView);
         wifiScanReceiver = new WifiScanReceiver();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiInfo = wifiManager.getConnectionInfo();
         wifiListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String ssid = getItem(position).SSID;
+                String bssid = getItem(position).BSSID;
+                if (wifiInfo.getBSSID().equals(bssid)){
+                    AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
+                    alert.setTitle("Forget Network?");
+                    alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            superClass.forgetNetwork(wifiInfo.getNetworkId());
+                            wifiManager.removeNetwork(wifiInfo.getNetworkId());
+                            wifiListAdapter.notifyDataSetChanged();
+                        }
+                    });
+                    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    alert.show();
+                }else{
+                    connectToWifi(ssid);
+                }
                 String frequency = String.valueOf(getItem(position).frequency);
                 String level = String.valueOf(getItem(position).level);
                 Log.d( "Frequency: ", frequency + " Level: " + level);
-                connectToWifi(ssid);
             }
         });
         wifiManager.startScan();
@@ -70,7 +98,10 @@ public class WifiActivity extends AppCompatActivity {
             Toast.makeText(this,"WiFi is disabled, Turning it on", Toast.LENGTH_LONG).show();
             wifiManager.setWifiEnabled(true);
         }
-        registerReceiver(wifiScanReceiver,new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        intentFilter.addCategory(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        registerReceiver(wifiScanReceiver,intentFilter);
     }
 
     class WifiScanReceiver extends BroadcastReceiver{
@@ -95,7 +126,15 @@ public class WifiActivity extends AppCompatActivity {
                 wifiListAdapter = new WifiListAdapter(context,wifiScanResult);
                 wifiListView.setAdapter(wifiListAdapter);
             }else {
-                Toast.makeText(WifiActivity.this,"No wifi results found", Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext,"No wifi results found", Toast.LENGTH_LONG).show();
+            }
+            String action  = intent.getAction();
+            if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)){
+                NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                int error = intent.getIntExtra(WifiManager.EXTRA_SUPPLICANT_ERROR,-1);
+                if (error == WifiManager.ERROR_AUTHENTICATING){
+                    Toast.makeText(context,"Wrong Password",Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
@@ -112,7 +151,7 @@ public class WifiActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    private void finallyConnect(String networkPass, String networkSSID) {
+    private void finallyConnect(String networkPass,final String networkSSID) {
         WifiConfiguration wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = String.format("\"%s\"", networkSSID);
         wifiConfig.preSharedKey = String.format("\"%s\"", networkPass);
@@ -121,12 +160,10 @@ public class WifiActivity extends AppCompatActivity {
         int netId = wifiManager.addNetwork(wifiConfig);
         wifiManager.disconnect();
         wifiManager.enableNetwork(netId, true);
-        wifiManager.reconnect();
-
-        WifiConfiguration conf = new WifiConfiguration();
-        conf.SSID = "\"\"" + networkSSID + "\"\"";
-        conf.preSharedKey = "\"" + networkPass + "\"";
-        wifiManager.addNetwork(conf);
+        if(!wifiManager.reconnect()){
+            Toast.makeText(mContext,"Wrong password", Toast.LENGTH_LONG).show();
+        }
+        wifiListAdapter.notifyDataSetChanged();
     }
 
     private void connectToWifi(final String wifiSSID) {
@@ -149,7 +186,6 @@ public class WifiActivity extends AppCompatActivity {
                 String checkPassword = pass.getText().toString();
                 finallyConnect(checkPassword, wifiSSID);
                 dialog.dismiss();
-                Toast.makeText(WifiActivity.this,"Connected to Network: " + wifiSSID, Toast.LENGTH_LONG).show();
             }
         });
         dialog.show();

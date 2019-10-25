@@ -6,6 +6,11 @@
     <string name="device_info">Device Info</string>
     <string name="wifi_settings">WiFi Settings</string>
     <string name="permissions">Permissions</string>
+    <string name="device_status">Device Status</string>
+    <string name="connectivity_details">Connectivity Details</string>
+    <string name="storage_details">Storage Details</string>
+    <string name="memory">(Used/Free/Total)</string>
+    <string name="network_settings">Network Settings</string>
     <string name="device_admin">Taglock Device Admin</string>
     <string name="device_admin_description">Allows Tagtalk Admins to control, manage and monitor the device</string>
     <string name="admin_explanation">Taglock Device Admin helps the user to get special privileges, e.g. to access the Taglock features. These privileges can only be acquired by accepting these policies.</string>
@@ -19,6 +24,8 @@
     <string name="group_key">Enter Group Key*</string>
     <string name="group_id">Enter Group Id*</string>
     <string name="permission">These permissions are necessary for Taglock to work properly.</string>
+    <string name="username">Enter username*</string>
+    <string name="password">Enter password*</string>
 
     <!--Menu strings-->
     <string name="info">Device Info</string>
@@ -33,7 +40,6 @@
     <string name="app_notification">We need "Notification Access" permission to block notifications, instead unread notifications are displayed as badge on app icons in TagLock homescreen. Enable "TagLock" on the following screen.</string>
     <string name="unknown_source">This permission is required to enable installation of apk\'\s pushed from TagLock dashboard. Please check/enable "Unknown Sources" option in following screen.</string>
     <string name="download_manager">We need download manager enabled to support. Press "OK" and "ENABLE" on the following screen.</string>
-    \
     <string name="overlay_permission">We require this permission to hide status bar, show notification center and background running apps, etc.</string>
     <string name="write_system">We wil need this permission to change device brightness, device rotation, device screen timeout settings and create hotspot, etc. Note: If you see that it is already enabled, just uncheck and recheck so that permission will grant properly.</string>
     <string name="device_details">We need this permission to access phone number, cellular network info and ongoing calls.</string>

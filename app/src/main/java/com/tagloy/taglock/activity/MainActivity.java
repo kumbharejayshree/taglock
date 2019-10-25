@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -22,14 +21,12 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.TextUtils;
-import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,6 +58,8 @@ import com.tagloy.taglock.utils.SuperClass;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.fabric.sdk.android.Fabric;
 import io.realm.RealmResults;
@@ -70,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     Context context = MainActivity.this;
     DeviceInfoController deviceInfoController = new DeviceInfoController();
-    DeviceInformation deviceInformation = new DeviceInformation();
+    DeviceInformation deviceInformation, deviceData;
     RecentAppClickReceiver mReceiver = new RecentAppClickReceiver();
     PermissionsClass permissionsClass;
     PackageManager manager;
@@ -87,7 +86,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public GifImageView downloadProgress;
     private static final String TAG = "MainActivity";
     private static SuperClass superClass;
-    CountDownTimer appCountDownTimer, wifiCountDownTimer, updateCountDownTimer;
+    int apk_call_duraion;
+    Timer updateTimer, wifiTimer;
+    TimerTask updateTimerTask, wifiTimerTask;
+    CountDownTimer updateCountDownTimer, appCountDownTimer;
     ApkManagement apkManagement;
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
@@ -114,7 +116,24 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
         final String pack = getProfile.get(0).getApp_package_name();
-        int apk_call_duraion = getProfile.get(0).getDefault_apk_call_duration();
+        apk_call_duraion = getProfile.get(0).getDefault_apk_call_duration();
+        logUser();
+        String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
+        boolean isDefaultInstalled = superClass.appInstalled(pack);
+        if (isDefaultInstalled) {
+            versionName = TaglockDeviceInfo.getVersion(this,pack);
+            PreferenceHelper.setValueString(context,AppConfig.APK_VERSION,versionName);
+            try {
+                apps = manager.getApplicationInfo(pack, PackageManager.GET_META_DATA);
+                CharSequence name = manager.getApplicationLabel(apps);
+                versionText.setText("Taglock Version: " + taglockVersion +  " " + name +  " Version: " + versionName);
+            } catch (PackageManager.NameNotFoundException ne) {
+                ne.printStackTrace();
+            }
+        } else {
+            versionName = "NULL";
+            versionText.setText("Taglock Version: " + taglockVersion);
+        }
         //Checking if app is running at time interval of given time
         appCountDownTimer = new CountDownTimer(apk_call_duraion * 1000, 1000) {
             @Override
@@ -131,28 +150,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 }
             }
         };
-        String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
-        boolean isDefaultInstalled = superClass.appInstalled(pack);
-        if (isDefaultInstalled) {
-            versionName = TaglockDeviceInfo.getVersion(this,pack);
-            try {
-                apps = manager.getApplicationInfo(pack, PackageManager.GET_META_DATA);
-                CharSequence name = manager.getApplicationLabel(apps);
-                versionText.setText("Taglock Version: " + taglockVersion +  " " + name +  " Version: " + versionName);
-            } catch (PackageManager.NameNotFoundException ne) {
-                ne.printStackTrace();
-            }
-        } else {
-            versionName = "NULL";
-            versionText.setText("Taglock Version: " + taglockVersion);
-        }
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
         superClass.hideDefaultLauncher(packageName);
         if (Build.VERSION.SDK_INT>=23)
             taglockDeviceInfo.hideStatusBar();
         superClass.hideNavToggle();
-        taglockDeviceInfo.deviceToken();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         provider = locationManager.getBestProvider(criteria, true);
@@ -173,69 +176,51 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 wifiManager.setWifiEnabled(true);
             }
         }
-        String mac = TaglockDeviceInfo.getMACAddress("wlan0");
-        String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
-        Log.d(TAG, "Mac: " + mac + " MacIth: " + macAddressEthernet);
         if (taglockDeviceInfo.isWifiConnected()){
             Integer ipAddress = taglockDeviceInfo.getIpAddress();
-            ip = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
+            ip = taglockDeviceInfo.intToIp(ipAddress);
         }else if (taglockDeviceInfo.isEthernetConnected()){
             ip = taglockDeviceInfo.getIp();
         }else {
             ip = "NA";
         }
         ipText.setText("IPAddress: " + ip);
+        if(!taglockDeviceInfo.isNetworkConnected()) {
+            ipText.append("(Not connected to internet)");
+        }else{
+            if (taglockDeviceInfo.isEthernetConnected()){
+                ipText.append("(LAN)");
+            }else if (taglockDeviceInfo.isWifiConnected()){
+                ipText.append("(WiFi)");
+            }
+        }
         String latitude = PreferenceHelper.getValueString(this, AppConfig.LATITUDE);
         String longitude = PreferenceHelper.getValueString(this, AppConfig.LONGITUDE);
         Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
-        deviceInformation.setLatitudes(latitude);
-        deviceInformation.setLongitudes(longitude);
-        deviceInformation.setIp_Address(ip);
-        deviceInformation.setWifimac_Address(mac);
-        deviceInformation.setLanimac_Address(macAddressEthernet);
-        deviceInformation.setDevice_Token(PreferenceHelper.getValueString(this, AppConfig.FCM_TOKEN));
-        String memory_details = taglockDeviceInfo.checkMemory();
-        deviceInformation.setStorage_memory(memory_details);
-        String RAM = taglockDeviceInfo.checkRAM();
-        deviceInformation.setRam(RAM);
-        boolean isWifiEnabled = taglockDeviceInfo.checkWifi();
-        deviceInformation.setWifi_status(isWifiEnabled);
-        String box_name = taglockDeviceInfo.getBoxName();
-        deviceInformation.setBox_Name(box_name);
-        String box_android = taglockDeviceInfo.getBoxAndroid();
-        deviceInformation.setAndroid_version(box_android);
-        String box_api = taglockDeviceInfo.getBoxApi();
-        deviceInformation.setDevice_Api_version(box_api);
-        String IST = taglockDeviceInfo.getDeviceTime();
-        long epoch = System.currentTimeMillis() / 1000;
-        deviceInformation.setUpdated_at(String.valueOf(epoch));
-        Log.d(TAG, "Version Name: " + versionName);
-        boolean deviceStatus = SuperClass.isAppRunning(this, this.getPackageName());
-        deviceInformation.setDevice_locked_status(deviceStatus);
         String device_name = PreferenceHelper.getValueString(this, AppConfig.DEVICE_NAME);
-        String device_group = PreferenceHelper.getValueString(this, AppConfig.DEVICE_GROUP);
-        boolean app_down_status = PreferenceHelper.getValueBoolean(this, AppConfig.APK_DOWN_STATUS);
-        boolean taglock_down_status = PreferenceHelper.getValueBoolean(this, AppConfig.TAGLOCK_DOWN_STATUS);
-        deviceInformation.setDevice_name(device_name);
-        deviceInformation.setDevice_group(device_group);
-        deviceInformation.setHdmi_status(true);
-        deviceInformation.setDefault_apk_version(versionName);
-        deviceInformation.setTaglock_version(taglockVersion);
-        deviceInformation.setApp_download_status(app_down_status);
-        deviceInformation.setTaglock_download_status(taglock_down_status);
+        deviceInformation = taglockDeviceInfo.updateDetails();
+        deviceData = taglockDeviceInfo.deviceData();
         taglockDeviceInfo.deviceDetails(deviceInformation);
         boolean realmDevice = deviceInfoController.isDeviceAvailable(device_name);
         if (realmDevice) {
-            deviceInfoController.updateDeviceData(device_name, deviceInformation);
+            deviceInfoController.updateDeviceData(device_name, deviceData);
         } else {
             deviceInfoController.addDeviceData(deviceInformation);
         }
 
-        //If tagbox is closed, open it
+        boolean isActive = PreferenceHelper.getValueBoolean(this,AppConfig.IS_ACTIVE);
+        //If default app is installed, open it
         if (isDefaultInstalled) {
             new appLoad(MainActivity.this).execute();
-            appCountDownTimer.start();
-            taglockDeviceInfo.updateDevice(deviceInformation);
+            if (isActive){
+                appCountDownTimer.start();
+                startUpdateTimer();
+                startWifiTimer();
+            }else {
+                stopUpdateTimer();
+                stopWifiTimer();
+            }
+            taglockDeviceInfo.updateDevice(deviceData);
         } else {
             //Else download default app
             PreferenceHelper.removeStringValue(this, AppConfig.APK_NAME);
@@ -250,32 +235,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             @Override
             public void onFinish() {
-                taglockDeviceInfo.updateDevice(deviceInformation);
                 apkManagement.getApk();
                 apkManagement.getTaglock();
-                taglockDeviceInfo.getCreds();
                 start();
             }
         };
         updateCountDownTimer.start();
-        wifiCountDownTimer = new CountDownTimer(10*60*1000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-            }
-
-            @Override
-            public void onFinish() {
-                if (!taglockDeviceInfo.isEthernetConnected()) {
-                    if (!taglockDeviceInfo.isNetworkConnected()) {
-                        wifiManager.setWifiEnabled(false);
-                        wifiManager.setWifiEnabled(true);
-                    }
-                }
-                start();
-            }
-        };
-        logUser();
-        wifiCountDownTimer.start();
         IntentFilter mFilter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         registerReceiver(mReceiver, mFilter);
         registerReceiver(apkManagement.downloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
@@ -286,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         throw new RuntimeException();
     }
 
+    //Log user for Fabric
     private void logUser() {
         String device_name = PreferenceHelper.getValueString(MainActivity.this, AppConfig.DEVICE_NAME);
         String device_group = PreferenceHelper.getValueString(MainActivity.this, AppConfig.DEVICE_GROUP);
@@ -301,6 +267,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     };
 
+    //Save location on locationChange
     @Override
     public void onLocationChanged(Location location) {
         double lat = location.getLatitude();
@@ -324,6 +291,60 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void onProviderDisabled(String provider) {
     }
 
+    //Start timer to update device data
+    public void startUpdateTimer(){
+        updateTimer = new Timer();
+        initializeUpdateTask();
+        updateTimer.schedule(updateTimerTask,5 *60 * 1000, 5 *60 * 1000);
+    }
+
+    //Start timer to check Wifi
+    public void startWifiTimer(){
+        wifiTimer = new Timer();
+        initializeWifiTask();
+        wifiTimer.schedule(wifiTimerTask,10 *60 * 1000, 10 *60 * 1000);
+    }
+
+    //Initialize update data task
+    public void initializeUpdateTask(){
+        updateTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+                taglockDeviceInfo.updateDevice(deviceData);
+            }
+        };
+    }
+
+    //Initialize check Wifi task
+    public void initializeWifiTask(){
+        wifiTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (!taglockDeviceInfo.isEthernetConnected()) {
+                    if (!taglockDeviceInfo.isNetworkConnected()) {
+                        wifiManager.setWifiEnabled(false);
+                        wifiManager.setWifiEnabled(true);
+                    }
+                }
+            }
+        };
+    }
+
+    //Stop timer to update device data
+    public void stopUpdateTimer(){
+        if (updateTimer!=null){
+            updateTimer.cancel();
+            updateTimer = null;
+        }
+    }
+
+    //Stop timer to check Wifi
+    public void stopWifiTimer(){
+        if (wifiTimer!=null){
+            wifiTimer.cancel();
+            wifiTimer = null;
+        }
+    }
 
     //Load apps in GridView dynamically
     public class appLoad extends AsyncTask<Void, Void, Void> {
@@ -403,7 +424,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 if (TextUtils.isEmpty(alertEdit.getText())) {
                                     Toast.makeText(context, "Please enter passcode", Toast.LENGTH_LONG).show();
                                 } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
+                                    stopUpdateTimer();
                                     appCountDownTimer.cancel();
+                                    stopWifiTimer();
                                     taglockDeviceInfo.exitApp();
                                     finish();
                                 } else {
@@ -440,10 +463,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
                 handler.postDelayed(runnable, 30000);
                 break;
-            //On wifi menu click
-            case R.id.wifiMenu:
-                Intent wifiIntent = new Intent(MainActivity.this, WifiActivity.class);
-                startActivity(wifiIntent);
+            //On network settings menu click
+            case R.id.settingsMenu:
+                Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                startActivity(intent);
                 break;
             //On logout menu click
             case R.id.clearMenu:
@@ -455,14 +478,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onBackPressed() {
-
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
 
+    //Window focus change
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -481,8 +500,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             } else {
                 appCountDownTimer.cancel();
             }
+            startUpdateTimer();
         }else {
             appCountDownTimer.cancel();
+            stopUpdateTimer();
+            stopWifiTimer();
         }
     }
 
@@ -499,7 +521,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public static class InstallApp extends AsyncTask<Void, Void, Void> {
         TaglockDeviceInfo taglockDeviceInfo;
         DeviceInfoController deviceInfoController = new DeviceInfoController();
-        DeviceInformation deviceInformation = new DeviceInformation();
+        DeviceInformation deviceInfo = new DeviceInformation();
         DefaultProfileController defaultProfileController = new DefaultProfileController();
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
         String pack = getProfile.get(0).getApp_package_name();
@@ -533,16 +555,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 taglockDeviceInfo = new TaglockDeviceInfo(context);
                 PreferenceHelper.setValueBoolean(context, AppConfig.INSTALL_STATUS, true);
                 String version = TaglockDeviceInfo.getVersion(context,pack);
+                PreferenceHelper.setValueString(context,AppConfig.APK_VERSION,version);
                 String device_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
                 String latitude = PreferenceHelper.getValueString(context, AppConfig.LATITUDE);
                 String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
-                deviceInformation.setApp_download_status(PreferenceHelper.getValueBoolean(context,AppConfig.INSTALL_STATUS));
-                deviceInformation.setDefault_apk_version(version);
-                deviceInformation.setLatitudes(latitude);
-                deviceInformation.setLongitudes(longitude);
-                deviceInformation.setDevice_name(device_name);
-                deviceInfoController.updateDeviceData(device_name,deviceInformation);
-                taglockDeviceInfo.updateDevice(deviceInformation);
+                deviceInfo.setApp_download_status(PreferenceHelper.getValueBoolean(context,AppConfig.INSTALL_STATUS));
+                deviceInfo.setDefault_apk_version(version);
+                deviceInfo.setLatitudes(latitude);
+                deviceInfo.setLongitudes(longitude);
+                deviceInfo.setDevice_name(device_name);
+                deviceInfoController.updateDeviceData(device_name,deviceInfo);
+                taglockDeviceInfo.updateDevice(deviceInfo);
                 Intent intent = context.getPackageManager().getLaunchIntentForPackage(pack);
                 context.startActivity(intent);
             } else {
@@ -556,7 +579,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public static class UpdateApp extends AsyncTask<Void, Void, Void> {
         TaglockDeviceInfo taglockDeviceInfo;
         DeviceInfoController deviceInfoController = new DeviceInfoController();
-        DeviceInformation deviceInformation = new DeviceInformation();
+        DeviceInformation deviceInfo = new DeviceInformation();
         DefaultProfileController defaultProfileController = new DefaultProfileController();
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
         String pack = getProfile.get(0).getApp_package_name();
@@ -571,34 +594,67 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         @Override
         protected void onPreExecute() {
+            PreferenceHelper.setValueBoolean(context,AppConfig.INSTALL_STATUS,false);
             Log.d("APK Status", "APK is updating...");
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            SuperClass.updateApp(fileName);
+            SuperClass.updateApp(context,fileName);
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            if (superClass.appInstalled(pack)) {
+            PreferenceHelper.setValueBoolean(context,AppConfig.APK_DOWN_STATUS,false);
+            boolean appDownloaded = PreferenceHelper.getValueBoolean(context,AppConfig.UPDATE_STATUS);
+            if (appDownloaded) {
                 taglockDeviceInfo = new TaglockDeviceInfo(context);
                 String device_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
-                PreferenceHelper.setValueBoolean(context, AppConfig.UPDATE_STATUS, true);
                 String version = TaglockDeviceInfo.getVersion(context,pack);
-                String tagVersion = TaglockDeviceInfo.getVersion(context,context.getPackageName());
-                deviceInformation.setApp_download_status(PreferenceHelper.getValueBoolean(context,AppConfig.INSTALL_STATUS));
-                deviceInformation.setDefault_apk_version(version);
-                deviceInformation.setTaglock_version(tagVersion);
-                deviceInformation.setDevice_name(device_name);
-                deviceInfoController.updateDeviceData(device_name,deviceInformation);
-                taglockDeviceInfo.updateDevice(deviceInformation);
+                PreferenceHelper.setValueString(context,AppConfig.APK_VERSION,version);
+                deviceInfo.setDefault_apk_version(version);
+                deviceInfo.setDevice_name(device_name);
+                deviceInfoController.updateDeviceData(device_name,deviceInfo);
+                taglockDeviceInfo.updateDevice(deviceInfo);
                 Intent intent = context.getPackageManager().getLaunchIntentForPackage(pack);
                 context.startActivity(intent);
-            } else {
-                PreferenceHelper.setValueBoolean(context, AppConfig.UPDATE_STATUS, false);
-                Log.d("Status", "APK is not Updated");
+            }
+        }
+    }
+
+    //To update taglock with given path
+    public static class UpdateTaglock extends AsyncTask<Void, Void, Void> {
+        TaglockDeviceInfo taglockDeviceInfo;
+        @SuppressLint("StaticFieldLeak")
+        Context context;
+        String fileName;
+
+        public UpdateTaglock(Context context, String fileName) {
+            this.context = context;
+            this.fileName = fileName;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            PreferenceHelper.setValueBoolean(context,AppConfig.TAGLOCK_INSTALL_STATUS,false);
+            Log.d("Taglock Status", "Taglock is updating...");
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            SuperClass.updateApp(context,fileName);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            PreferenceHelper.setValueBoolean(context,AppConfig.TAGLOCK_DOWN_STATUS,false);
+            taglockDeviceInfo = new TaglockDeviceInfo(context);
+            boolean taglockDownloaded = PreferenceHelper.getValueBoolean(context,AppConfig.TAGLOCK_INSTALL_STATUS);
+            if (taglockDownloaded) {
+                Intent intent = new Intent(context, SplashActivity.class);
+                context.startActivity(intent);
             }
         }
     }

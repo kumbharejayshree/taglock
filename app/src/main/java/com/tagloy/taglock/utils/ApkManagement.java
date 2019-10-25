@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
-import android.widget.ProgressBar;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -59,9 +58,9 @@ public class ApkManagement {
             final String pack = getProfile.get(0).getApp_package_name();
             RequestQueue queue = Volley.newRequestQueue(context);
             try{
-                String group_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
+                String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("group_name",group_name);
+                jsonObject.put("device_name",device_name);
                 final String request = jsonObject.toString();
                 StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GET_APK_URL, new Response.Listener<String>() {
                     @Override
@@ -78,7 +77,7 @@ public class ApkManagement {
                                 long ins = Long.parseLong(installedVersion);
                                 if (ver > ins) {
                                     PreferenceHelper.setValueString(context, AppConfig.APK_NAME, apk_name);
-                                    File dir = new File(Environment.getExternalStorageDirectory() + "/taglock/apkmanagement");
+                                    File dir = new File(Environment.getExternalStorageDirectory() + "/.taglock/.apkmanagement");
                                     TaglockDeviceInfo.deleteDir(dir);
                                     downloadApk(apk_name);
                                 } else {
@@ -86,7 +85,7 @@ public class ApkManagement {
                                 }
                             } else {
                                 PreferenceHelper.setValueString(context, AppConfig.APK_NAME, apk_name);
-                                File dir = new File(Environment.getExternalStorageDirectory() + "/taglock/apkmanagement");
+                                File dir = new File(Environment.getExternalStorageDirectory() + "/.taglock/.apkmanagement");
                                 TaglockDeviceInfo.deleteDir(dir);
                                 downloadApk(apk_name);
                             }
@@ -97,7 +96,7 @@ public class ApkManagement {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Status: ", "Failed to get apk name");
+                        Log.d("Status: ", "Failed to get apk");
                     }
                 }) {
                     @Override
@@ -150,7 +149,7 @@ public class ApkManagement {
                             long ins = Long.parseLong(installedVersion);
                             if (ver > ins) {
                                 PreferenceHelper.setValueString(context, AppConfig.TAGLOCK_APK, apk_name);
-                                File dir = new File(Environment.getExternalStorageDirectory() + "/taglock/taglockmanagement");
+                                File dir = new File(Environment.getExternalStorageDirectory() + "/.taglock/.taglockmanagement");
                                 TaglockDeviceInfo.deleteDir(dir);
                                 downloadTaglock(apk_name);
                             } else {
@@ -163,7 +162,7 @@ public class ApkManagement {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Status: ", "Failed to get apk name");
+                        Log.d("Status: ", "Failed to get apk");
                     }
                 }) {
                     @Override
@@ -199,7 +198,7 @@ public class ApkManagement {
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
         request.setVisibleInDownloadsUi(false);
-        String apkPath = "/taglock/apkmanagement/";
+        String apkPath = "/.taglock/.apkmanagement/";
         request.setDestinationInExternalPublicDir(apkPath, uri.getLastPathSegment());
         DownloadManager downloadManager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
         apkId = downloadManager.enqueue(request);
@@ -233,7 +232,7 @@ public class ApkManagement {
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
         request.setVisibleInDownloadsUi(false);
-        String taglockPath = "/taglock/taglockmanagement/";
+        String taglockPath = "/.taglock/.taglockmanagement/";
         request.setDestinationInExternalPublicDir(taglockPath, uri.getLastPathSegment());
         DownloadManager downloadManager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
         taglockId = downloadManager.enqueue(request);
@@ -272,7 +271,7 @@ public class ApkManagement {
             if (id == apkId) {
                 progressBar.setVisibility(View.GONE);
                 PreferenceHelper.setValueBoolean(context, AppConfig.APK_DOWN_STATUS, true);
-                String fileName = "apkmanagement/" + PreferenceHelper.getValueString(context, AppConfig.APK_NAME);
+                String fileName = ".apkmanagement/" + PreferenceHelper.getValueString(context, AppConfig.APK_NAME);
                 boolean isTagboxInstalled = superClass.appInstalled(pack);
                 if (!isTagboxInstalled) {
                     new MainActivity.InstallApp(context, fileName).execute();
@@ -282,8 +281,8 @@ public class ApkManagement {
             } else if (id == taglockId) {
                 progressBar.setVisibility(View.GONE);
                 PreferenceHelper.setValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS, true);
-                String fileName = "taglockmanagement/" + PreferenceHelper.getValueString(context, AppConfig.TAGLOCK_APK);
-                new MainActivity.UpdateApp(context, fileName).execute();
+                String fileName = ".taglockmanagement/" + PreferenceHelper.getValueString(context, AppConfig.TAGLOCK_APK);
+                new MainActivity.UpdateTaglock(context, fileName).execute();
             }
         }
     };

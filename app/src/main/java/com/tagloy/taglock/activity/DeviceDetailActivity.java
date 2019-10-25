@@ -2,7 +2,6 @@ package com.tagloy.taglock.activity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,31 +10,14 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.Toast;
-
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.tagloy.taglock.R;
-import com.tagloy.taglock.models.Groups;
 import com.tagloy.taglock.utils.AppConfig;
 import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.SuperClass;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DeviceDetailActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -83,7 +65,7 @@ public class DeviceDetailActivity extends AppCompatActivity implements View.OnCl
                     String deviceName = deviceNameEdit.getText().toString();
                     String groupId = groupIdEdit.getText().toString();
                     taglockDeviceInfo.getGroup(groupId);
-                    taglockDeviceInfo.getCreds();
+//                    taglockDeviceInfo.getCreds();
                     taglockDeviceInfo.checkGroupKey(deviceName,groupId, groupKey);
                 }
         }

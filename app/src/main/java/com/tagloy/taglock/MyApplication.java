@@ -19,7 +19,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        new ANRWatchDog(25000).setReportMainThreadOnly().start();
+        new ANRWatchDog(30000).setReportMainThreadOnly().start();
         Fabric.with(this, new Crashlytics());
         Realm.init(this);
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()

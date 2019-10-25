@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,11 +16,14 @@ import android.widget.TextView;
 
 import com.tagloy.taglock.R;
 import com.squareup.picasso.Picasso;
+import com.tagloy.taglock.utils.SuperClass;
+
 import java.util.List;
 
 public class WifiListAdapter extends BaseAdapter {
     List<ScanResult> list;
     Context context;
+    SuperClass superClass;
 
     public WifiListAdapter(Context context, List<ScanResult> list){
         this.context = context;
@@ -45,6 +47,7 @@ public class WifiListAdapter extends BaseAdapter {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
+        superClass = new SuperClass(context);
         ViewHolder viewHolder = null;
         if (list!=null){
             viewHolder = new ViewHolder();
@@ -70,8 +73,8 @@ public class WifiListAdapter extends BaseAdapter {
         viewHolder.wifiNameText.setText(list.get(position).SSID);
         final WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        String ssid = (wifiInfo.getSSID()).replace("\"","");
-        if (list.get(position).SSID.equals(ssid)){
+        String bssid = (wifiInfo.getBSSID()).replace("\"","");
+        if (list.get(position).BSSID.equals(bssid)){
             viewHolder.statusText.setText("Connected");
             viewHolder.forgetButton.setVisibility(View.VISIBLE);
             viewHolder.forgetButton.setOnClickListener(new View.OnClickListener() {
@@ -83,9 +86,8 @@ public class WifiListAdapter extends BaseAdapter {
                     alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            wifiManager.disableNetwork(wifiInfo.getNetworkId());
-                            if (Build.VERSION.SDK_INT < 26)
-                                wifiManager.saveConfiguration();
+                            wifiManager.removeNetwork(wifiInfo.getNetworkId());
+                            superClass.forgetNetwork(wifiInfo.getNetworkId());
                         }
                     });
                     alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

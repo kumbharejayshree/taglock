@@ -1,28 +1,18 @@
 package com.tagloy.taglock.activity;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -32,19 +22,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.adapters.WifiListAdapter;
 import com.tagloy.taglock.utils.AppConfig;
-import com.tagloy.taglock.utils.PermissionsClass;
 import com.tagloy.taglock.utils.PreferenceHelper;
-import com.tagloy.taglock.utils.SuperClass;
-import com.tagloy.taglock.receiver.TaglockAdminReceiver;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
 import java.util.List;
-
-import io.fabric.sdk.android.Fabric;
 
 public class NetworkActivity extends AppCompatActivity {
 
@@ -85,7 +69,7 @@ public class NetworkActivity extends AppCompatActivity {
             }
         });
         String device_name = PreferenceHelper.getValueString(this,AppConfig.DEVICE_NAME);
-        if (!device_name.equals("")){
+        if (device_name != null){
             Intent intent = new Intent(NetworkActivity.this,MainActivity.class);
             startActivity(intent);
             finish();

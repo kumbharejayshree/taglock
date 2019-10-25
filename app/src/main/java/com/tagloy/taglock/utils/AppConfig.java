@@ -12,12 +12,16 @@ public class AppConfig {
     public static final String INSERT_DEVICE_URL = BASE_URL + "/device/androiddevice";
     public static final String UPDATE_DEVICE_URL = BASE_URL + "/device/androidupdate";
     public static final String CREDENTIALS_URL = BASE_URL + "/credentials/getcred";
-    public static final String GET_APK_URL = BASE_URL + "/apk/getapk";
+//    public static final String GET_APK_URL = BASE_URL + "/apk/getapk";
+    public static final String GET_APK_URL = BASE_URL + "/apk/getandroid";
     public static final String GET_TAGLOCK_URL = BASE_URL + "/taglock/gettaglock";
     public static final String APK_URI = BASE_URL + "/upload/apk/";
     public static final String TAGLOCK_URI = BASE_URL + "/upload/taglock/";
+
     public static final String TAGLOCK_PREF = "taglock_pref";
+
     public static final String IS_ACTIVE = "taglock";
+    public static final String APK_VERSION = "apk_version";
     public static final String DEVICE_LAUNCHER = "device_launcher";
     public static final String APK_NAME = "apk_name";
     public static final String APK_DOWN_STATUS = "apk_down_status";

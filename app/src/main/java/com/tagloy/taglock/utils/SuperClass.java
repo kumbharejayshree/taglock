@@ -4,28 +4,22 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
-import com.tagloy.taglock.R;
 import com.tagloy.taglock.activity.MainActivity;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 
 import io.realm.RealmResults;
 
 public class SuperClass {
 
-    public static final String ACTION_INSTALL_COMPLETE = "com.tagloy.taglock.INSTALL_COMPLETE";
     Context context;
     public SuperClass(Context context){
         this.context = context;
@@ -45,10 +39,8 @@ public class SuperClass {
         try{
             Process reboot = Runtime.getRuntime().exec(new String[]{"su","-c","reboot"});
             reboot.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -57,10 +49,8 @@ public class SuperClass {
         try{
             Process reboot = Runtime.getRuntime().exec(new String[]{"su","-c","reboot -p"});
             reboot.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -92,12 +82,10 @@ public class SuperClass {
     //To install app from given apk name
     public static void installApp(String apkName){
         try{
-            Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm install /storage/emulated/0/taglock/" + apkName});
+            Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm install /storage/emulated/0/.taglock/" + apkName});
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -116,10 +104,8 @@ public class SuperClass {
                 deleteDir(dir1);
             }
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -143,14 +129,25 @@ public class SuperClass {
         return dir.delete();
     }
     //To update app from given apk name
-    public static void updateApp(String apkName){
+    public static void updateApp(Context context,String apkName){
         try{
-            Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm install -r /storage/emulated/0/taglock/" + apkName});
+            Log.d("D","Yes");
+            Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm install -r /storage/emulated/0/.taglock/" + apkName});
+            PreferenceHelper.setValueBoolean(context,AppConfig.TAGLOCK_INSTALL_STATUS,true);
+            PreferenceHelper.setValueBoolean(context,AppConfig.UPDATE_STATUS,true);
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
+        }
+    }
+
+    //To forget network
+    public void forgetNetwork(int networkId){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "wpa_cli remove_network " + networkId});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
         }
     }
 
@@ -159,10 +156,8 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "settings put global policy_control immersive.full=*"});
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -171,10 +166,8 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "settings put global policy_control null*"});
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -183,10 +176,8 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[]{"su","-c","settings put secure install_non_market_apps 1"});
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -195,10 +186,100 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.WRITE_SECURE_SETTINGS"});
             root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable camera
+    public void enableCamera(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.CAMERA"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable storage
+    public void enableStorage(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.WRITE_EXTERNAL_STORAGE"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable contacts
+    public void enableContacts(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.WRITE_CONTACTS"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable location
+    public void enableLocation(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.ACCESS_FINE_LOCATION"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable location
+    public void enableCoarseLocation(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.ACCESS_COARSE_LOCATION"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable phone state
+    public void enablePhoneState(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.READ_PHONE_STATE"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable phone calls
+    public void enablePhoneCalls(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.PROCESS_OUTGOING_CALLS"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //To enable read storage
+    public void enableReadStorage(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.READ_EXTERNAL_STORAGE"});
+            root.waitFor();
         }catch (IOException ie){
             ie.printStackTrace();
         }catch (InterruptedException ine){
             ine.printStackTrace();
+        }
+    }
+
+    //To enable read contacts
+    public void enableReadContacts(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.READ_CONTACTS"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
         }
     }
 
@@ -226,10 +307,8 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm disable " + packageName});
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 
@@ -238,10 +317,8 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "pm enable " + packageName});
             root.waitFor();
-        }catch (IOException ie){
+        }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 }

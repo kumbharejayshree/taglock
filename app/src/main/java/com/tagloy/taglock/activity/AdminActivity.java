@@ -1,7 +1,6 @@
 package com.tagloy.taglock.activity;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AppOpsManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -21,9 +20,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,7 +58,6 @@ public class AdminActivity extends AppCompatActivity {
     private static final int REQUEST_PERMISSIONS = 131;
     ListView permissionListView;
     TextView submitPermission;
-    Button grantButton;
     List<Permissions> permissions = new ArrayList<>();
     PermissionsAdapter permissionsAdapter;
     @Override
@@ -82,34 +78,35 @@ public class AdminActivity extends AppCompatActivity {
         superClass.enableUnknownSource();
         superClass.enableWriteSettings(getPackageName());
         permissionListView = findViewById(R.id.permissionsList);
-        View footerView = ((LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.footer_layout,null,false);
-        grantButton = footerView.findViewById(R.id.grantButton);
+//        View footerView = ((LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.footer_layout,null,false);
+//        grantButton = footerView.findViewById(R.id.grantButton);
         if (isMyPolicyActive()) {
             boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
-            boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+            boolean location = superClass.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+            boolean coarseLocation = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
             boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
             boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
             boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-            if (phone && location && contacts && camera && storage) {
-                grantButton.setClickable(false);
+            if (phone && location && contacts && camera && storage && coarseLocation) {
                 PreferenceHelper.setValueBoolean(this, AppConfig.IS_ACTIVE, true);
                 SuperClass.enableActivity(AdminActivity.this);
                 Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
                 startActivity(intent);
             } else {
-                grantButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (Build.VERSION.SDK_INT >= 23) {
-                            requestPermissions();
-                        }
-                    }
-                });
+                superClass.enableCamera(getPackageName());
+                superClass.enableContacts(getPackageName());
+                superClass.enableLocation(getPackageName());
+                superClass.enableCoarseLocation(getPackageName());
+                superClass.enablePhoneCalls(getPackageName());
+                superClass.enablePhoneState(getPackageName());
+                superClass.enableStorage(getPackageName());
+                superClass.enableReadContacts(getPackageName());
+                superClass.enableReadStorage(getPackageName());
             }
         } else {
             Toast.makeText(AdminActivity.this, "Please grant admin permission", Toast.LENGTH_SHORT).show();
         }
-        permissionListView.addFooterView(footerView);
+//        permissionListView.addFooterView(footerView);
         submitPermission = findViewById(R.id.submitPermission);
         submitPermission.setClickable(false);
         new GetPermissions(this).execute();
@@ -227,17 +224,6 @@ public class AdminActivity extends AppCompatActivity {
                     intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
                     intent.setData(Uri.parse("package:" + getPackageName()));
                     startActivityForResult(intent, REQUEST_SETTING);
-                }
-                break;
-            case REQUEST_PERMISSIONS:
-                for (int i=0;i<grantResults.length;i++){
-                    if (grantResults[i] != PackageManager.PERMISSION_GRANTED){
-                        if (Build.VERSION.SDK_INT >= 23) {
-                            shouldShowRequestPermissionRationale(permissions[i]);
-                        }
-                    }else {
-                        grantButton.setClickable(false);
-                    }
                 }
                 break;
         }

@@ -3,8 +3,8 @@
     <external-path name="external_files" path="."/>
     <external-path
         name="apk_path"
-        path="/taglock/apkmanagement"/>
+        path="/.taglock/.apkmanagement"/>
     <external-path
         name="taglock_path"
-        path="/taglock/taglockmanagement"/>
+        path="/.taglock/.taglockmanagement"/>
 </paths>

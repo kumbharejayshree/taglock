@@ -7,7 +7,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -113,8 +112,7 @@ public class TaglockDeviceInfo {
     public Integer getIpAddress() {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        Integer ip = wifiInfo.getIpAddress();
-        return ip;
+        return wifiInfo.getIpAddress();
     }
 
     public String getIp(){
@@ -154,38 +152,6 @@ public class TaglockDeviceInfo {
         }
         return "";
     }
-
-    public void checkHDMI() {
-        Intent intent = new Intent("android.intent.action.HDMI_PLUGGED");
-        context.sendBroadcast(intent);
-    }
-
-    public void deviceToken() {
-        SharedPreferences sharedPreferences = context.getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
-        final String token = sharedPreferences.getString("fcm_token", "");
-        Log.d("Token: ", token);
-        RequestQueue queue = Volley.newRequestQueue(context);
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.FCM_URL, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        }) {
-            @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> param = new HashMap<>();
-                param.put("fcm_token", token);
-                return param;
-            }
-        };
-        queue.add(stringRequest);
-    }
-
 
     public void checkNameValidity(final String deviceName) {
         if (isNetworkConnected()) {
@@ -405,7 +371,7 @@ public class TaglockDeviceInfo {
 
     public void createFile(String sBody) {
         try {
-            File root = new File(Environment.getExternalStorageDirectory(), "/taglock/.app");
+            File root = new File(Environment.getExternalStorageDirectory(), "/.taglock/.app");
             if (!root.exists()) {
                 root.mkdirs();
             }
@@ -432,7 +398,6 @@ public class TaglockDeviceInfo {
         String usedMemory = String.format("%.02f",used);
         String totalMemory = String.format("%.02f",total);
         String memory = usedMemory + "MB/" + freeMemory + "GB/" + totalMemory + "GB";
-        Log.d("Memory",memory);
         return memory;
     }
 
@@ -442,7 +407,6 @@ public class TaglockDeviceInfo {
         activityManager.getMemoryInfo(memoryInfo);
         long totalMemory = ((memoryInfo.totalMem / 1024) / 1024);
         String ram = totalMemory + "MB";
-        Log.d("RAM: ", totalMemory + "MB");
         return ram;
     }
 
@@ -456,7 +420,6 @@ public class TaglockDeviceInfo {
         String model = Build.MODEL;
         String manufacturer = Build.MANUFACTURER;
         builder.append(manufacturer).append(" ").append(model);
-        Log.d("DeviceName: ", builder.toString());
         return builder.toString();
     }
 
@@ -489,7 +452,6 @@ public class TaglockDeviceInfo {
 
     public String getDeviceTime() {
         String IST = new SimpleDateFormat("yyyy-mm-dd HH:mm:ss").format(new Date());
-        Log.d("DeviceTime: ", IST);
         return IST;
     }
 
@@ -666,9 +628,9 @@ public class TaglockDeviceInfo {
                             JSONObject jsonObject = new JSONObject(response);
                             String res = jsonObject.getString("status");
                             if (res.equals("200")) {
-                                Log.d("Success: ", "Device details updated");
+                                Log.d("Success ", "Device details updated");
                             } else {
-                                Log.d("Failure: ", "Device details not updated");
+                                Log.d("Failure ", "Device details not updated");
                             }
                         } catch (JSONException je) {
                             je.printStackTrace();
@@ -706,6 +668,115 @@ public class TaglockDeviceInfo {
         }
     }
 
+    @SuppressLint("DefaultLocale")
+    public String intToIp(int data){
+        return String.format("%d.%d.%d.%d", (data & 0xff), (data >> 8 & 0xff), (data >> 16 & 0xff), (data >> 24 & 0xff));
+    }
+
+    public DeviceInformation deviceData(){
+        superClass = new SuperClass(context);
+        String ip, versionName;
+        final DefaultProfileController defaultProfileController = new DefaultProfileController();
+        RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
+        final String pack = getProfile.get(0).getApp_package_name();
+        DeviceInformation deviceInformation = new DeviceInformation();
+        if (isWifiConnected()){
+            Integer ipAddress = getIpAddress();
+            ip = intToIp(ipAddress);
+        }else if (isEthernetConnected()){
+            ip = getIp();
+        }else {
+            ip = "NA";
+        }
+        String latitude = PreferenceHelper.getValueString(context, AppConfig.LATITUDE);
+        String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
+        String taglockVersion = TaglockDeviceInfo.getVersion(context,context.getPackageName());
+        Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
+        versionName = PreferenceHelper.getString(context, AppConfig.APK_VERSION);
+        deviceInformation.setLatitudes(latitude);
+        deviceInformation.setLongitudes(longitude);
+        deviceInformation.setIp_Address(ip);
+        deviceInformation.setDevice_Token(PreferenceHelper.getValueString(context, AppConfig.FCM_TOKEN));
+        String memory_details = checkMemory();
+        deviceInformation.setStorage_memory(memory_details);
+        boolean isWifiEnabled = checkWifi();
+        deviceInformation.setWifi_status(isWifiEnabled);
+        long epoch = System.currentTimeMillis() / 1000;
+        deviceInformation.setUpdated_at(String.valueOf(epoch));
+        boolean deviceStatus = PreferenceHelper.getValueBoolean(context,AppConfig.IS_ACTIVE);
+        deviceInformation.setDevice_locked_status(deviceStatus);
+        String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
+        String device_group = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
+        boolean app_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.APK_DOWN_STATUS);
+        boolean taglock_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS);
+        deviceInformation.setDevice_name(device_name);
+        deviceInformation.setDevice_group(device_group);
+        deviceInformation.setHdmi_status(true);
+        deviceInformation.setDefault_apk_version(versionName);
+        deviceInformation.setTaglock_version(taglockVersion);
+        deviceInformation.setApp_download_status(app_down_status);
+        deviceInformation.setTaglock_download_status(taglock_down_status);
+        return deviceInformation;
+    }
+
+    public DeviceInformation updateDetails(){
+        superClass = new SuperClass(context);
+        String ip, versionName;
+        final DefaultProfileController defaultProfileController = new DefaultProfileController();
+        RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
+        final String pack = getProfile.get(0).getApp_package_name();
+        DeviceInformation deviceInformation = new DeviceInformation();
+        String mac = TaglockDeviceInfo.getMACAddress("wlan0");
+        String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
+        if (isWifiConnected()){
+            Integer ipAddress = getIpAddress();
+            ip = intToIp(ipAddress);
+        }else if (isEthernetConnected()){
+            ip = getIp();
+        }else {
+            ip = "NA";
+        }
+        String latitude = PreferenceHelper.getValueString(context, AppConfig.LATITUDE);
+        String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
+        String taglockVersion = TaglockDeviceInfo.getVersion(context,context.getPackageName());
+        Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
+        versionName = PreferenceHelper.getString(context, AppConfig.APK_VERSION);
+        deviceInformation.setLatitudes(latitude);
+        deviceInformation.setLongitudes(longitude);
+        deviceInformation.setIp_Address(ip);
+        deviceInformation.setWifimac_Address(mac);
+        deviceInformation.setLanimac_Address(macAddressEthernet);
+        deviceInformation.setDevice_Token(PreferenceHelper.getValueString(context, AppConfig.FCM_TOKEN));
+        String memory_details = checkMemory();
+        deviceInformation.setStorage_memory(memory_details);
+        String RAM = checkRAM();
+        deviceInformation.setRam(RAM);
+        boolean isWifiEnabled = checkWifi();
+        deviceInformation.setWifi_status(isWifiEnabled);
+        String box_name = getBoxName();
+        deviceInformation.setBox_Name(box_name);
+        String box_android = getBoxAndroid();
+        deviceInformation.setAndroid_version(box_android);
+        String box_api = getBoxApi();
+        deviceInformation.setDevice_Api_version(box_api);
+        long epoch = System.currentTimeMillis() / 1000;
+        deviceInformation.setUpdated_at(String.valueOf(epoch));
+        boolean deviceStatus = PreferenceHelper.getValueBoolean(context,AppConfig.IS_ACTIVE);
+        deviceInformation.setDevice_locked_status(deviceStatus);
+        String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
+        String device_group = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
+        boolean app_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.APK_DOWN_STATUS);
+        boolean taglock_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS);
+        deviceInformation.setDevice_name(device_name);
+        deviceInformation.setDevice_group(device_group);
+        deviceInformation.setHdmi_status(true);
+        deviceInformation.setDefault_apk_version(versionName);
+        deviceInformation.setTaglock_version(taglockVersion);
+        deviceInformation.setApp_download_status(app_down_status);
+        deviceInformation.setTaglock_download_status(taglock_down_status);
+        return deviceInformation;
+    }
+
     public static String getVersion(Context context1,String packageName) {
         String versionName = "";
         try {
@@ -725,7 +796,7 @@ public class TaglockDeviceInfo {
         localLayoutParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ERROR;
         localLayoutParams.gravity = Gravity.TOP;
         localLayoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                // this is to enable the notification to receive touch events
+                // This is to enable the notification to receive touch events
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
 
                 // Draws over status bar

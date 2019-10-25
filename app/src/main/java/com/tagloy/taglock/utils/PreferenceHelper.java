@@ -36,6 +36,11 @@ public class PreferenceHelper {
         return prefs.getString(key, null);
     }
 
+    public static String getString(Context context, String key) throws NullPointerException{
+        SharedPreferences prefs = context.getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
+        return prefs.getString(key, null);
+    }
+
     public static boolean getValueBoolean(Context context, String key) {
         SharedPreferences prefs = context.getSharedPreferences(AppConfig.TAGLOCK_PREF, Context.MODE_PRIVATE);
         return prefs.getBoolean(key, false);
