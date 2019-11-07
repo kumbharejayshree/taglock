@@ -156,6 +156,7 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "settings put global policy_control immersive.full=*"});
             root.waitFor();
+            PreferenceHelper.setValueBoolean(context,AppConfig.IS_NAV_VISIBLE,false);
         }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
         }
@@ -166,6 +167,7 @@ public class SuperClass {
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "settings put global policy_control null*"});
             root.waitFor();
+            PreferenceHelper.setValueBoolean(context,AppConfig.IS_NAV_VISIBLE,true);
         }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
         }

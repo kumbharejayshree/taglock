@@ -2,19 +2,29 @@ package com.tagloy.taglock.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
+import android.app.admin.DeviceAdminService;
+import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
@@ -40,6 +50,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.android.gms.common.util.DeviceProperties;
 import com.tagloy.taglock.adapters.GridAdapter;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmcontrollers.DeviceInfoController;
@@ -142,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             @Override
             public void onFinish() {
-                if (!SuperClass.isAppRunning(MainActivity.this, pack)) {
+                if (!SuperClass.isAppRunning(context, pack)) {
                     Intent intent = getPackageManager().getLaunchIntentForPackage(pack);
                     startActivity(intent);
                 } else {
@@ -211,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         boolean isActive = PreferenceHelper.getValueBoolean(this,AppConfig.IS_ACTIVE);
         //If default app is installed, open it
         if (isDefaultInstalled) {
-            new appLoad(MainActivity.this).execute();
+            new appLoad(context).execute();
             if (isActive){
                 appCountDownTimer.start();
                 startUpdateTimer();
@@ -243,8 +254,58 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         updateCountDownTimer.start();
         IntentFilter mFilter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         registerReceiver(mReceiver, mFilter);
+        registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         registerReceiver(apkManagement.downloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         registerReceiver(batteryInfo, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    }
+
+    private BroadcastReceiver connectionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent == null || intent.getExtras() == null)
+                return;
+
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED){
+                if (taglockDeviceInfo.isWifiConnected()){
+                    Integer ipAddress = taglockDeviceInfo.getIpAddress();
+                    ip = taglockDeviceInfo.intToIp(ipAddress);
+                }else if (taglockDeviceInfo.isEthernetConnected()){
+                    ip = taglockDeviceInfo.getIp();
+                }else {
+                    ip = "NA";
+                }
+                ipText.setText("IPAddress: " + ip);
+                if(!taglockDeviceInfo.isNetworkConnected()) {
+                    ipText.append("(Not connected to internet)");
+                }else{
+                    if (taglockDeviceInfo.isEthernetConnected()){
+                        ipText.append("(LAN)");
+                    }else if (taglockDeviceInfo.isWifiConnected()){
+                        ipText.append("(WiFi)");
+                    }
+                }
+            }else {
+                ip = "NA";
+                ipText.setText("IPAddress: " + ip);
+                ipText.append("(Not connected to internet)");
+            }
+        }
+    };
+
+    public void testNetwork() {
+        if (taglockDeviceInfo.isNetworkConnected()){
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (Build.VERSION.SDK_INT>Build.VERSION_CODES.M){
+                NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
+                int down = nc.getLinkDownstreamBandwidthKbps() / 1000;
+                int up = nc.getLinkUpstreamBandwidthKbps() / 1000;
+                Toast.makeText(context, "Down: " + down + " up: " + up, Toast.LENGTH_LONG).show();
+            }
+        }else{
+            Toast.makeText(context, "Check network!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void forceCrash(MenuItem menuItem) {
@@ -253,8 +314,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     //Log user for Fabric
     private void logUser() {
-        String device_name = PreferenceHelper.getValueString(MainActivity.this, AppConfig.DEVICE_NAME);
-        String device_group = PreferenceHelper.getValueString(MainActivity.this, AppConfig.DEVICE_GROUP);
+        String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
+        String device_group = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
         Crashlytics.setUserName(device_group);
         Crashlytics.setUserIdentifier(device_name);
     }
@@ -274,8 +335,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         double lon = location.getLongitude();
         String latitude = String.valueOf(lat);
         String longitude = String.valueOf(lon);
-        PreferenceHelper.setValueString(MainActivity.this, AppConfig.LATITUDE, latitude);
-        PreferenceHelper.setValueString(MainActivity.this, AppConfig.LONGITUDE, longitude);
+        PreferenceHelper.setValueString(context, AppConfig.LATITUDE, latitude);
+        PreferenceHelper.setValueString(context, AppConfig.LONGITUDE, longitude);
         Log.d("Location", "Latitude: " + lat + " Longitude: " + lon);
     }
 
@@ -396,24 +457,37 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(connectionReceiver);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
+        final int passcode = getProfile.get(0).getPasscode();
+        View view = getLayoutInflater().inflate(R.layout.alert_dialog, null);
+        final EditText alertEdit = view.findViewById(R.id.alertEdit);
         switch (item.getItemId()) {
             //On settings menu click
             case R.id.infoMenu:
-                Intent infoIntent = new Intent(MainActivity.this, InfoActivity.class);
+                Intent infoIntent = new Intent(context, InfoActivity.class);
                 startActivity(infoIntent);
                 break;
             //On refresh menu click
-            case R.id.refreshMenu:
-                gridAdapter.notifyDataSetChanged();
-                break;
+//            case R.id.refreshMenu:
+//                taglockDeviceInfo.switchNav();
+//                testNetwork();
+//                break;
             //On exit menu click
             case R.id.exitMenu:
-                final int passcode = getProfile.get(0).getPasscode();
-                View view = getLayoutInflater().inflate(R.layout.alert_dialog, null);
-                final EditText alertEdit = view.findViewById(R.id.alertEdit);
                 final AlertDialog.Builder alert = new AlertDialog.Builder(this);
                 alert.setTitle("Enter Passcode")
                         .setMessage("Are you sure you want to exit?")
@@ -431,6 +505,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                     finish();
                                 } else {
                                     Toast.makeText(context, "Incorrect passcode!", Toast.LENGTH_LONG).show();
+                                    int count = PreferenceHelper.getValueInt(context, AppConfig.FAILED_COUNT);
+                                    if (count>=5){
+                                        SuperClass.clearData();
+                                    }else {
+                                        count = count + 1;
+                                        Toast.makeText(context, "Failed attempts: " + count, Toast.LENGTH_LONG).show();
+                                        PreferenceHelper.setValueInt(context, AppConfig.FAILED_COUNT, count);
+                                    }
                                 }
                             }
                         })
@@ -465,8 +547,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 break;
             //On network settings menu click
             case R.id.settingsMenu:
-                Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
-                startActivity(intent);
+                Intent settingIntent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                startActivity(settingIntent);
                 break;
             //On logout menu click
             case R.id.clearMenu:
@@ -476,16 +558,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return super.onOptionsItemSelected(item);
     }
 
+    public static boolean isCallable(Activity activity, Intent intent) {
+        List<ResolveInfo> list = activity.getPackageManager().queryIntentActivities(intent,PackageManager.MATCH_DEFAULT_ONLY);
+        return list.size() > 0;
+    }
+
     @Override
     public void onBackPressed() {
     }
-
 
     //Window focus change
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        boolean isActive = PreferenceHelper.getValueBoolean(MainActivity.this,AppConfig.IS_ACTIVE);
+        boolean isActive = PreferenceHelper.getValueBoolean(context,AppConfig.IS_ACTIVE);
         if (isActive){
             if (hasFocus) {
                 final DefaultProfileController defaultProfileController = new DefaultProfileController();

@@ -14,11 +14,13 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMessagingServ";
     SuperClass superClass = new SuperClass(this);
+    TaglockDeviceInfo taglockDeviceInfo = new TaglockDeviceInfo(this);
     ApkManagement apkManagement = new ApkManagement(this);
 
     @Override
@@ -53,10 +55,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                             SuperClass.clearData();
                             break;
                         case "refresh":
-                            superClass.hideNavToggle();
-                            break;
-                        case "show":
-                            superClass.showNavToggle();
+                            taglockDeviceInfo.switchNav();
                             break;
                         case "installtag":
                             new MainActivity.InstallApp(getApplicationContext(),taglock_apk).execute();

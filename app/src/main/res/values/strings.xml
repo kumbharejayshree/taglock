@@ -9,8 +9,11 @@
     <string name="device_status">Device Status</string>
     <string name="connectivity_details">Connectivity Details</string>
     <string name="storage_details">Storage Details</string>
+    <string name="orientation">Orientation</string>
+    <string name="current_orientation">Current Orientation: </string>
+    <string name="current_timezone">Current Timezone: </string>
+    <string name="change_orientation"><u>Change Orientation</u></string>
     <string name="memory">(Used/Free/Total)</string>
-    <string name="network_settings">Network Settings</string>
     <string name="device_admin">Taglock Device Admin</string>
     <string name="device_admin_description">Allows Tagtalk Admins to control, manage and monitor the device</string>
     <string name="admin_explanation">Taglock Device Admin helps the user to get special privileges, e.g. to access the Taglock features. These privileges can only be acquired by accepting these policies.</string>
@@ -33,6 +36,8 @@
     <string name="refresh">Refresh</string>
     <string name="clear">Clear Data</string>
     <string name="exit">Exit Taglock</string>
+    <string name="network_settings">Network Settings</string>
+    <string name="rotation">Rotation Settings</string>
 
     <!--Permission strings-->
     <string name="admin_permission">Activate TagLock Device Admin to provide better kiosk environment.</string>

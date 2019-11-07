@@ -21,7 +21,9 @@ public class AppConfig {
     public static final String TAGLOCK_PREF = "taglock_pref";
 
     public static final String IS_ACTIVE = "taglock";
+    public static final String IS_NAV_VISIBLE = "nav";
     public static final String APK_VERSION = "apk_version";
+    public static final String FAILED_COUNT = "failed_count";
     public static final String DEVICE_LAUNCHER = "device_launcher";
     public static final String APK_NAME = "apk_name";
     public static final String APK_DOWN_STATUS = "apk_down_status";

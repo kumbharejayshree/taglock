@@ -1,11 +1,19 @@
 package com.tagloy.taglock.activity;
 
 import android.content.Context;
+import android.net.http.SslError;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.HttpAuthHandler;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 
@@ -19,13 +27,24 @@ public class WebActivity extends AppCompatActivity {
         setContentView(R.layout.activity_web);
         mContext = this;
         webView = findViewById(R.id.webView);
-        webView.loadUrl("https://www.google.in");
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setAppCacheEnabled(true);
+        webSettings.setAppCachePath(getApplicationContext().getFilesDir().getAbsolutePath() + "/cache");
+        webSettings.setDatabaseEnabled(true);
         webView.setWebViewClient(new WebViewClient(){
             @Override
             public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler, String host, String realm) {
-//                super.onReceivedHttpAuthRequest(view, handler, host, realm);
                 handler.proceed("tagloc","India@150");
             }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                Toast.makeText(WebActivity.this, "Your Internet Connection May not be active Or " + error , Toast.LENGTH_LONG).show();
+            }
         });
+        webView.loadUrl("http://fast.com");
     }
 }

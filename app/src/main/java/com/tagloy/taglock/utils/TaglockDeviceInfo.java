@@ -3,6 +3,7 @@ package com.tagloy.taglock.utils;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -62,6 +63,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import io.realm.RealmResults;
 
@@ -316,6 +318,15 @@ public class TaglockDeviceInfo {
         }
     }
 
+    public void setTimeZone(String timeZone){
+        AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+        alarmManager.setTimeZone(TimeZone.getTimeZone(timeZone).getID());
+    }
+
+    public void getTimeZone() {
+        TimeZone tz = TimeZone.getDefault();
+    }
+
     public void getCreds(){
         if (isNetworkConnected()) {
             try {
@@ -385,7 +396,6 @@ public class TaglockDeviceInfo {
         }
     }
 
-    @SuppressLint("DefaultLocale")
     public String checkMemory() {
         StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getPath());
         float bytesAvailable, bytesTotal;
@@ -788,6 +798,16 @@ public class TaglockDeviceInfo {
         return versionName;
     }
 
+    public void switchNav(){
+        superClass = new SuperClass(context);
+        boolean is_visible = PreferenceHelper.getValueBoolean(context, AppConfig.IS_NAV_VISIBLE);
+        if (is_visible){
+            superClass.hideNavToggle();
+        }else {
+            superClass.showNavToggle();
+        }
+    }
+
     //Hide the status and navigation bar
     public void hideStatusBar() {
         WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
@@ -870,6 +890,7 @@ public class TaglockDeviceInfo {
                         } else if (Integer.parseInt(alertEdit.getText().toString()) == clearPass) {
                             SuperClass.clearData();
                             dialog.cancel();
+                            Toast.makeText(context, "Data cleared successfully!", Toast.LENGTH_LONG).show();
                         } else {
                             Toast.makeText(context, "Passcode is incorrect", Toast.LENGTH_LONG).show();
                         }

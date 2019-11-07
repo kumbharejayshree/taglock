@@ -33,6 +33,7 @@ public class SplashActivity extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         devicePolicyAdmin = new ComponentName(this, TaglockAdminReceiver.class);
+        PreferenceHelper.setValueInt(mContext, AppConfig.FAILED_COUNT, 0);
         Handler handler = new Handler();
 
         handler.postDelayed(new Runnable() {
