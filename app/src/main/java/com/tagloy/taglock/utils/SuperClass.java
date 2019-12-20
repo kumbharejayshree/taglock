@@ -323,4 +323,14 @@ public class SuperClass {
             ie.printStackTrace();
         }
     }
+
+    //To Switch Android debugging
+    public void switchDebugging(int set){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "settings put global adb_enabled " + set});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
 }

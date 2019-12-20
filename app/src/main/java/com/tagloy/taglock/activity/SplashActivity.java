@@ -34,6 +34,8 @@ public class SplashActivity extends AppCompatActivity {
         devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         devicePolicyAdmin = new ComponentName(this, TaglockAdminReceiver.class);
         PreferenceHelper.setValueInt(mContext, AppConfig.FAILED_COUNT, 0);
+        PreferenceHelper.setValueBoolean(mContext,AppConfig.HDMI_STATUS, true);
+        PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_LOCKED,true);
         Handler handler = new Handler();
 
         handler.postDelayed(new Runnable() {

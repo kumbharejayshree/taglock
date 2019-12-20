@@ -5,26 +5,23 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
-import android.app.admin.DeviceAdminService;
-import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
@@ -45,12 +42,12 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
-import com.google.android.gms.common.util.DeviceProperties;
 import com.tagloy.taglock.adapters.GridAdapter;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmcontrollers.DeviceInfoController;
@@ -66,6 +63,7 @@ import com.tagloy.taglock.utils.PermissionsClass;
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.utils.SuperClass;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -91,13 +89,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public static GridAdapter gridAdapter;
     RelativeLayout mainLayout;
     public static GridView appsGrid;
+    ImageView wallapaperImage;
     TextView versionText, ipText;
     ApplicationInfo apps;
     String provider, ip, versionName;
     public GifImageView downloadProgress;
     private static final String TAG = "MainActivity";
     private static SuperClass superClass;
-    int apk_call_duraion;
+    int app_call_duration;
     Timer updateTimer, wifiTimer;
     TimerTask updateTimerTask, wifiTimerTask;
     CountDownTimer updateCountDownTimer, appCountDownTimer;
@@ -121,13 +120,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         downloadProgress = findViewById(R.id.downloadProgress);
         versionText = findViewById(R.id.versionText);
         ipText = findViewById(R.id.ipText);
+        wallapaperImage = findViewById(R.id.wallpaperImageView);
         superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         apkManagement = new ApkManagement(this);
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
         final String pack = getProfile.get(0).getApp_package_name();
-        apk_call_duraion = getProfile.get(0).getDefault_apk_call_duration();
+        app_call_duration = getProfile.get(0).getDefault_apk_call_duration();
         logUser();
         String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
         boolean isDefaultInstalled = superClass.appInstalled(pack);
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             try {
                 apps = manager.getApplicationInfo(pack, PackageManager.GET_META_DATA);
                 CharSequence name = manager.getApplicationLabel(apps);
-                versionText.setText("Taglock Version: " + taglockVersion +  " " + name +  " Version: " + versionName);
+                versionText.setText("Taglock Version: " + taglockVersion +  "\n" + name +  " Version: " + versionName);
             } catch (PackageManager.NameNotFoundException ne) {
                 ne.printStackTrace();
             }
@@ -145,8 +145,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             versionName = "NULL";
             versionText.setText("Taglock Version: " + taglockVersion);
         }
+
+        //If debugging is enabled, then disable it
+//        if(Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1) {
+//            // debugging enabled
+//            superClass.switchDebugging(0);
+//        }
+
         //Checking if app is running at time interval of given time
-        appCountDownTimer = new CountDownTimer(apk_call_duraion * 1000, 1000) {
+        appCountDownTimer = new CountDownTimer(app_call_duration * 1000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
             }
@@ -164,9 +171,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
         superClass.hideDefaultLauncher(packageName);
+        superClass.hideNavToggle();
         if (Build.VERSION.SDK_INT>=23)
             taglockDeviceInfo.hideStatusBar();
-        superClass.hideNavToggle();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         provider = locationManager.getBestProvider(criteria, true);
@@ -187,34 +194,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 wifiManager.setWifiEnabled(true);
             }
         }
-        if (taglockDeviceInfo.isWifiConnected()){
-            Integer ipAddress = taglockDeviceInfo.getIpAddress();
-            ip = taglockDeviceInfo.intToIp(ipAddress);
-        }else if (taglockDeviceInfo.isEthernetConnected()){
-            ip = taglockDeviceInfo.getIp();
-        }else {
-            ip = "NA";
-        }
-        ipText.setText("IPAddress: " + ip);
-        if(!taglockDeviceInfo.isNetworkConnected()) {
-            ipText.append("(Not connected to internet)");
-        }else{
-            if (taglockDeviceInfo.isEthernetConnected()){
-                ipText.append("(LAN)");
-            }else if (taglockDeviceInfo.isWifiConnected()){
-                ipText.append("(WiFi)");
+        String wallpaper = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
+        if (wallpaper == null){
+            wallapaperImage.setBackgroundColor(getResources().getColor(R.color.blackWall));
+            PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,"test");
+            PreferenceHelper.setValueBoolean(context,AppConfig.WALLPAPER_DOWN_STATUS, false);
+        } else {
+            boolean wall_downloaded = PreferenceHelper.getValueBoolean(context,AppConfig.WALLPAPER_DOWN_STATUS);
+            if (wall_downloaded){
+                File imageFile = new File("/storage/emulated/0/.taglock/" + wallpaper);
+                if (imageFile.exists()){
+                    Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                    wallapaperImage.setImageBitmap(bitmap);
+                }
             }
         }
-        String latitude = PreferenceHelper.getValueString(this, AppConfig.LATITUDE);
-        String longitude = PreferenceHelper.getValueString(this, AppConfig.LONGITUDE);
-        Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
-        String device_name = PreferenceHelper.getValueString(this, AppConfig.DEVICE_NAME);
         deviceInformation = taglockDeviceInfo.updateDetails();
         deviceData = taglockDeviceInfo.deviceData();
         taglockDeviceInfo.deviceDetails(deviceInformation);
-        boolean realmDevice = deviceInfoController.isDeviceAvailable(device_name);
+        boolean realmDevice = deviceInfoController.isDeviceAvailable();
         if (realmDevice) {
-            deviceInfoController.updateDeviceData(device_name, deviceData);
+            deviceInfoController.updateDeviceData(deviceInformation);
         } else {
             deviceInfoController.addDeviceData(deviceInformation);
         }
@@ -232,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 stopWifiTimer();
             }
             taglockDeviceInfo.updateDevice(deviceData);
+//            taglockDeviceInfo.deviceSession(deviceData);
         } else {
             //Else download default app
             PreferenceHelper.removeStringValue(this, AppConfig.APK_NAME);
@@ -257,6 +258,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         registerReceiver(apkManagement.downloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         registerReceiver(batteryInfo, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        registerReceiver(taglockDeviceInfo.downloadReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     }
 
     private BroadcastReceiver connectionReceiver = new BroadcastReceiver() {
@@ -294,20 +296,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     };
 
-    public void testNetwork() {
-        if (taglockDeviceInfo.isNetworkConnected()){
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (Build.VERSION.SDK_INT>Build.VERSION_CODES.M){
-                NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
-                int down = nc.getLinkDownstreamBandwidthKbps() / 1000;
-                int up = nc.getLinkUpstreamBandwidthKbps() / 1000;
-                Toast.makeText(context, "Down: " + down + " up: " + up, Toast.LENGTH_LONG).show();
-            }
-        }else{
-            Toast.makeText(context, "Check network!", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     public void forceCrash(MenuItem menuItem) {
         throw new RuntimeException();
     }
@@ -337,7 +325,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         String longitude = String.valueOf(lon);
         PreferenceHelper.setValueString(context, AppConfig.LATITUDE, latitude);
         PreferenceHelper.setValueString(context, AppConfig.LONGITUDE, longitude);
-        Log.d("Location", "Latitude: " + lat + " Longitude: " + lon);
     }
 
     @Override
@@ -356,14 +343,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void startUpdateTimer(){
         updateTimer = new Timer();
         initializeUpdateTask();
-        updateTimer.schedule(updateTimerTask,5 *60 * 1000, 5 *60 * 1000);
+        updateTimer.schedule(updateTimerTask,5*60*1000, 5*60*1000);
+    }
+
+    //Start timer to update session
+    public void startSessionTimer(){
+        updateTimer = new Timer();
+        initializeUpdateTask();
+        updateTimer.schedule(updateTimerTask,60*60*1000, 60*60*1000);
     }
 
     //Start timer to check Wifi
     public void startWifiTimer(){
         wifiTimer = new Timer();
         initializeWifiTask();
-        wifiTimer.schedule(wifiTimerTask,10 *60 * 1000, 10 *60 * 1000);
+        wifiTimer.schedule(wifiTimerTask,10*60*1000, 10*60*1000);
     }
 
     //Initialize update data task
@@ -376,11 +370,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         };
     }
 
+    //Initialize session task
+    public void initializeSessionTask(){
+        updateTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+                taglockDeviceInfo.deviceSession(deviceData);
+            }
+        };
+    }
+
     //Initialize check Wifi task
     public void initializeWifiTask(){
         wifiTimerTask = new TimerTask() {
             @Override
             public void run() {
+                PreferenceHelper.setValueBoolean(context,AppConfig.IS_LOCKED,true);
                 if (!taglockDeviceInfo.isEthernetConnected()) {
                     if (!taglockDeviceInfo.isNetworkConnected()) {
                         wifiManager.setWifiEnabled(false);
@@ -468,6 +473,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
+    public void exitTag(){
+        stopUpdateTimer();
+        appCountDownTimer.cancel();
+        stopWifiTimer();
+        taglockDeviceInfo.exitApp();
+        finish();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
@@ -481,69 +494,65 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 Intent infoIntent = new Intent(context, InfoActivity.class);
                 startActivity(infoIntent);
                 break;
-            //On refresh menu click
-//            case R.id.refreshMenu:
-//                taglockDeviceInfo.switchNav();
-//                testNetwork();
-//                break;
             //On exit menu click
             case R.id.exitMenu:
-                final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-                alert.setTitle("Enter Passcode")
-                        .setMessage("Are you sure you want to exit?")
-                        .setView(view)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if (TextUtils.isEmpty(alertEdit.getText())) {
-                                    Toast.makeText(context, "Please enter passcode", Toast.LENGTH_LONG).show();
-                                } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
-                                    stopUpdateTimer();
-                                    appCountDownTimer.cancel();
-                                    stopWifiTimer();
-                                    taglockDeviceInfo.exitApp();
-                                    finish();
-                                } else {
-                                    Toast.makeText(context, "Incorrect passcode!", Toast.LENGTH_LONG).show();
-                                    int count = PreferenceHelper.getValueInt(context, AppConfig.FAILED_COUNT);
-                                    if (count>=5){
-                                        SuperClass.clearData();
-                                    }else {
-                                        count = count + 1;
-                                        Toast.makeText(context, "Failed attempts: " + count, Toast.LENGTH_LONG).show();
-                                        PreferenceHelper.setValueInt(context, AppConfig.FAILED_COUNT, count);
+                boolean is_locked = PreferenceHelper.getValueBoolean(context,AppConfig.IS_LOCKED);
+                if (is_locked){
+                    final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                    alert.setTitle("Enter Passcode")
+                            .setMessage("Are you sure you want to exit?")
+                            .setView(view)
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if (TextUtils.isEmpty(alertEdit.getText())) {
+                                        Toast.makeText(context, "Please enter passcode", Toast.LENGTH_LONG).show();
+                                    } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
+                                        exitTag();
+                                    } else {
+                                        Toast.makeText(context, "Incorrect passcode!", Toast.LENGTH_LONG).show();
+                                        int count = PreferenceHelper.getValueInt(context, AppConfig.FAILED_COUNT);
+                                        if (count>=5){
+                                            SuperClass.clearData();
+                                        }else {
+                                            count = count + 1;
+                                            Toast.makeText(context, "Failed attempts: " + count, Toast.LENGTH_LONG).show();
+                                            PreferenceHelper.setValueInt(context, AppConfig.FAILED_COUNT, count);
+                                        }
                                     }
                                 }
-                            }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        });
-                final AlertDialog dialog = alert.create();
-                dialog.setCanceledOnTouchOutside(false);
-                dialog.show();
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            });
+                    final AlertDialog dialog = alert.create();
+                    dialog.setCanceledOnTouchOutside(false);
+                    dialog.show();
 
-                final Handler handler = new Handler();
-                final Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        if (dialog.isShowing()) {
-                            dialog.dismiss();
+                    final Handler handler = new Handler();
+                    final Runnable runnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (dialog.isShowing()) {
+                                dialog.dismiss();
+                            }
                         }
-                    }
-                };
+                    };
 
-                alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        handler.removeCallbacks(runnable);
-                    }
-                });
+                    alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialog) {
+                            handler.removeCallbacks(runnable);
+                        }
+                    });
 
-                handler.postDelayed(runnable, 30000);
+                    handler.postDelayed(runnable, 30000);
+                }else {
+                    exitTag();
+                }
                 break;
             //On network settings menu click
             case R.id.settingsMenu:
@@ -581,12 +590,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if (isDefaultInstalled) {
                     appCountDownTimer.start();
                 }else {
-                    Log.d("Status: ", "APK is not installed");
+                    Log.d("Status", "APK is not installed");
+                    apkManagement.getApk();
                 }
             } else {
                 appCountDownTimer.cancel();
             }
-            startUpdateTimer();
         }else {
             appCountDownTimer.cancel();
             stopUpdateTimer();
@@ -601,6 +610,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         unregisterReceiver(apkManagement.downloadReceiver);
         unregisterReceiver(batteryInfo);
         unregisterReceiver(mReceiver);
+        unregisterReceiver(taglockDeviceInfo.downloadReceiver);
     }
 
     //To install apk with given path
@@ -642,15 +652,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 PreferenceHelper.setValueBoolean(context, AppConfig.INSTALL_STATUS, true);
                 String version = TaglockDeviceInfo.getVersion(context,pack);
                 PreferenceHelper.setValueString(context,AppConfig.APK_VERSION,version);
-                String device_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
-                String latitude = PreferenceHelper.getValueString(context, AppConfig.LATITUDE);
-                String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
                 deviceInfo.setApp_download_status(PreferenceHelper.getValueBoolean(context,AppConfig.INSTALL_STATUS));
                 deviceInfo.setDefault_apk_version(version);
-                deviceInfo.setLatitudes(latitude);
-                deviceInfo.setLongitudes(longitude);
-                deviceInfo.setDevice_name(device_name);
-                deviceInfoController.updateDeviceData(device_name,deviceInfo);
+                deviceInfoController.updateApkDetails(deviceInfo);
                 taglockDeviceInfo.updateDevice(deviceInfo);
                 Intent intent = context.getPackageManager().getLaunchIntentForPackage(pack);
                 context.startActivity(intent);
@@ -696,12 +700,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             boolean appDownloaded = PreferenceHelper.getValueBoolean(context,AppConfig.UPDATE_STATUS);
             if (appDownloaded) {
                 taglockDeviceInfo = new TaglockDeviceInfo(context);
-                String device_name = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
                 String version = TaglockDeviceInfo.getVersion(context,pack);
                 PreferenceHelper.setValueString(context,AppConfig.APK_VERSION,version);
+                deviceInfo.setApp_download_status(PreferenceHelper.getValueBoolean(context,AppConfig.INSTALL_STATUS));
                 deviceInfo.setDefault_apk_version(version);
-                deviceInfo.setDevice_name(device_name);
-                deviceInfoController.updateDeviceData(device_name,deviceInfo);
+                deviceInfoController.updateApkDetails(deviceInfo);
                 taglockDeviceInfo.updateDevice(deviceInfo);
                 Intent intent = context.getPackageManager().getLaunchIntentForPackage(pack);
                 context.startActivity(intent);

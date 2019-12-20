@@ -59,7 +59,9 @@ public class ApkManagement {
             RequestQueue queue = Volley.newRequestQueue(context);
             try{
                 String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
+                int device_id = PreferenceHelper.getValueInt(context, AppConfig.DEVICE_ID);
                 JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id",device_id);
                 jsonObject.put("device_name",device_name);
                 final String request = jsonObject.toString();
                 StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.GET_APK_URL, new Response.Listener<String>() {
@@ -132,7 +134,9 @@ public class ApkManagement {
         if (taglockDeviceInfo.isNetworkConnected()) {
             try{
                 String group_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
+                int device_id = PreferenceHelper.getValueInt(context, AppConfig.DEVICE_ID);
                 JSONObject jsonObject = new JSONObject();
+                jsonObject.put("id",device_id);
                 jsonObject.put("group_name",group_name);
                 final String  request = jsonObject.toString();
                 RequestQueue queue = Volley.newRequestQueue(context);

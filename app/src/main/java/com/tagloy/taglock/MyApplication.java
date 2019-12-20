@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.crashlytics.android.Crashlytics;
 import com.github.anrwatchdog.ANRWatchDog;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.tagloy.taglock.realm.RealmController;
 import com.facebook.stetho.Stetho;
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
@@ -15,12 +16,14 @@ import io.realm.RealmConfiguration;
 
 public class MyApplication extends Application {
     Realm mrealm;
+    public FirebaseAnalytics firebaseAnalytics;
 
     @Override
     public void onCreate() {
         super.onCreate();
         new ANRWatchDog(30000).setReportMainThreadOnly().start();
         Fabric.with(this, new Crashlytics());
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
         Realm.init(this);
         RealmConfiguration realmConfiguration = new RealmConfiguration.Builder()
                 .name(Realm.DEFAULT_REALM_NAME)
@@ -34,7 +37,8 @@ public class MyApplication extends Application {
         Stetho.initialize(
                 Stetho.newInitializerBuilder(this)
                         .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
-                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).withLimit(100000).build())
+                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(this)
+                        .withDeleteIfMigrationNeeded(true).withLimit(100000).build())
                         .build());
     }
 }

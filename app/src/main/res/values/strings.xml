@@ -1,9 +1,11 @@
 <resources>
     <!--App strings-->
     <string name="app_name">TagLock</string>
-    <string name="device_name">Device Name</string>
+    <string name="device_name">Device Name: </string>
+    <string name="device_group">Device Group: </string>
+    <string name="device_information">Device Info</string>
     <string name="device_detail">Device Details</string>
-    <string name="device_info">Device Info</string>
+    <string name="device_info">Device Information</string>
     <string name="wifi_settings">WiFi Settings</string>
     <string name="permissions">Permissions</string>
     <string name="device_status">Device Status</string>

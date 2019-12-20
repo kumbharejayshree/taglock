@@ -5,15 +5,19 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.graphics.PixelFormat;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -39,10 +43,12 @@ import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.tagloy.taglock.R;
+import com.tagloy.taglock.activity.MainActivity;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmcontrollers.DeviceInfoController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
 import com.tagloy.taglock.realmmodels.DeviceInformation;
+import com.tagloy.taglock.receiver.HdmiListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,18 +73,21 @@ import java.util.TimeZone;
 
 import io.realm.RealmResults;
 
+import static android.content.Context.DOWNLOAD_SERVICE;
+
 public class TaglockDeviceInfo {
 
     private Context context;
     private WindowManager windowManager;
     private customViewGroup view;
     private SuperClass superClass;
+    private long wallId;
 
     public TaglockDeviceInfo(Context context) {
         this.context = context;
     }
 
-
+    //To get default launcher of the device
     public void getLauncher() {
         PackageManager pm = context.getPackageManager();
         Intent i = new Intent(Intent.ACTION_MAIN);
@@ -88,11 +97,13 @@ public class TaglockDeviceInfo {
         PreferenceHelper.setValueString(context, AppConfig.DEVICE_LAUNCHER, packageName);
     }
 
+    //To check if device is connected to the network
     public boolean isNetworkConnected() {
         NetworkInfo info = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         return info != null && info.isConnected();
     }
 
+    //To check if device is connected to WiFi
     public Boolean isWifiConnected() {
         if (isNetworkConnected()) {
             ConnectivityManager cm
@@ -102,6 +113,7 @@ public class TaglockDeviceInfo {
         return false;
     }
 
+    //To check if device is connected to LAN
     public Boolean isEthernetConnected() {
         if (isNetworkConnected()) {
             ConnectivityManager cm
@@ -111,12 +123,14 @@ public class TaglockDeviceInfo {
         return false;
     }
 
+    //To get device IP address for WiFI
     public Integer getIpAddress() {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         return wifiInfo.getIpAddress();
     }
 
+    //To get device IP address for LAN
     public String getIp(){
         String ipAddress = null;
         try {
@@ -134,6 +148,7 @@ public class TaglockDeviceInfo {
         return null;
     }
 
+    //To get device MAC address
     public static String getMACAddress(String interfaceName) {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -155,6 +170,7 @@ public class TaglockDeviceInfo {
         return "";
     }
 
+    //To check if device name entered by user is unique
     public void checkNameValidity(final String deviceName) {
         if (isNetworkConnected()) {
             try {
@@ -211,6 +227,7 @@ public class TaglockDeviceInfo {
         }
     }
 
+    //To check validity of group key entered by user
     public void checkGroupKey(final String deviceName, final String groupId, final String groupKey) {
         if (isNetworkConnected()) {
             try {
@@ -267,6 +284,7 @@ public class TaglockDeviceInfo {
         }
     }
 
+    //Get group name of the device
     public void getGroup(String groupId){
         if (isNetworkConnected()) {
             try {
@@ -380,6 +398,7 @@ public class TaglockDeviceInfo {
         }
     }
 
+    //
     public void createFile(String sBody) {
         try {
             File root = new File(Environment.getExternalStorageDirectory(), "/.taglock/.app");
@@ -396,6 +415,7 @@ public class TaglockDeviceInfo {
         }
     }
 
+    //To get memory of the device
     public String checkMemory() {
         StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getPath());
         float bytesAvailable, bytesTotal;
@@ -411,6 +431,7 @@ public class TaglockDeviceInfo {
         return memory;
     }
 
+    //To get RAM of the device
     public String checkRAM() {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
@@ -420,11 +441,13 @@ public class TaglockDeviceInfo {
         return ram;
     }
 
+    //To check if wifi is connected or not
     public boolean checkWifi() {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         return wifiManager.isWifiEnabled();
     }
 
+    //Get Manufacturer of the device
     public String getBoxName() {
         StringBuilder builder = new StringBuilder();
         String model = Build.MODEL;
@@ -433,6 +456,7 @@ public class TaglockDeviceInfo {
         return builder.toString();
     }
 
+    //Get Android version of the device
     public String getBoxAndroid() {
         StringBuilder builder = new StringBuilder();
         Field[] fields = Build.VERSION_CODES.class.getFields();
@@ -445,6 +469,7 @@ public class TaglockDeviceInfo {
         return builder.toString();
     }
 
+    //Get API version of the Android version
     public String getBoxApi() {
         StringBuilder builder = new StringBuilder();
         Field[] fields = Build.VERSION_CODES.class.getFields();
@@ -465,6 +490,7 @@ public class TaglockDeviceInfo {
         return IST;
     }
 
+    //Get profile details and apply profile to the device
     public void applyProfile(String group_name) {
         if (isNetworkConnected()){
             final DefaultProfileController defaultProfileController = new DefaultProfileController();
@@ -489,9 +515,9 @@ public class TaglockDeviceInfo {
                                 defaultProfile.setDefault_apk_call_duration(profile.getInt("default_apk_call"));
                                 defaultProfile.setGroup_name(profile.getString("group_name"));
                                 defaultProfile.setDefault_apk_version(profile.getString("apk_version"));
-                                boolean profileRealm = defaultProfileController.isAvailablProfileData(profile.getString("group_name"));
+                                boolean profileRealm = defaultProfileController.isAvailablProfileData();
                                 if (profileRealm) {
-                                    defaultProfileController.updateProfileDataContent(profile.getString("group_name"), defaultProfile);
+                                    defaultProfileController.updateProfileDataContent(defaultProfile);
                                 } else {
                                     defaultProfileController.addDefaultProfileData(defaultProfile);
                                 }
@@ -532,6 +558,7 @@ public class TaglockDeviceInfo {
         }
     }
 
+    //For first entry of the device
     public void deviceDetails(final DeviceInformation deviceInformation) {
         if (isNetworkConnected()) {
             try {
@@ -567,6 +594,9 @@ public class TaglockDeviceInfo {
                             String res = jsonObject.getString("status");
                             if (res.equals("201")) {
                                 Log.d("Success: ", "Device details inserted");
+                                int id = jsonObject.getInt("id");
+                                Log.d("Id", String.valueOf(id));
+                                PreferenceHelper.setValueInt(context, AppConfig.DEVICE_ID, id);
                             }
                         } catch (JSONException je) {
                             je.printStackTrace();
@@ -604,12 +634,19 @@ public class TaglockDeviceInfo {
         }
     }
 
+    //Update device data
     public void updateDevice(final DeviceInformation deviceInformation) {
+        final DefaultProfileController defaultProfileController = new DefaultProfileController();
+        final DeviceInfoController deviceInfoController = new DeviceInfoController();
+        final DeviceInformation deviceInformation1 = new DeviceInformation();
+        final DefaultProfile defaultProfile = new DefaultProfile();
         if (isNetworkConnected()) {
             try {
+                int id = PreferenceHelper.getValueInt(context,AppConfig.DEVICE_ID);
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("device_name", deviceInformation.getDevice_name());
-                jsonObject.put("device_group", deviceInformation.getDevice_group());
+                jsonObject.put("id",id);
+//                jsonObject.put("device_name", deviceInformation.getDevice_name());
+//                jsonObject.put("device_group", deviceInformation.getDevice_group());
                 jsonObject.put("latitude", deviceInformation.getLatitudes());
                 jsonObject.put("longitude", deviceInformation.getLongitudes());
                 jsonObject.put("box_name", deviceInformation.getBox_Name());
@@ -637,10 +674,157 @@ public class TaglockDeviceInfo {
                         try {
                             JSONObject jsonObject = new JSONObject(response);
                             String res = jsonObject.getString("status");
+                            String message = jsonObject.getString("message");
                             if (res.equals("200")) {
-                                Log.d("Success ", "Device details updated");
+                                Log.d("Success ", message);
+                                String result = jsonObject.getString("result");
+                                JSONObject resultObject = new JSONObject(result);
+                                int device_id = resultObject.getInt("id");
+                                String device_name = resultObject.getString("device_name");
+                                String device_group = resultObject.getString("device_group");
+                                String group_image = resultObject.getString("group_image");
+                                int exit_passcode = resultObject.getInt("passcode");
+                                int clear_passcode = resultObject.getInt("clear_passcode");
+                                int call_duration = resultObject.getInt("default_apk_call");
+                                String package_name = resultObject.getString("apk_package");
+                                String device_n = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
+                                String device_g = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
+                                String group_i = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
+                                Log.d("DG", device_g);
+                                Log.d("D group", device_group);
+                                if (group_i!= null && !group_i.equals(group_image)){
+                                    PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+                                    File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
+                                    if(!imageFile.exists())
+                                        downloadWallpaper(group_image);
+                                }
+                                if (!device_n.equals(device_name) || !device_g.equals(device_group)){
+                                    deviceInformation1.setDevice_name(device_name);
+                                    deviceInformation1.setDevice_group(device_group);
+                                    deviceInfoController.updateDevice(deviceInformation1);
+                                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_NAME,device_name);
+                                    Log.d("Realm Device","Updated");
+                                }
+                                if (!device_g.equals(device_group)){
+                                    defaultProfile.setPasscode(exit_passcode);
+                                    defaultProfile.setGroup_name(device_group);
+                                    defaultProfile.setClear_data_passcode(clear_passcode);
+                                    defaultProfileController.updateProfile(defaultProfile);
+                                    defaultProfile.setDefault_apk_call_duration(call_duration);
+                                    defaultProfile.setApp_package_name(package_name);
+                                    defaultProfileController.updateProfileData(defaultProfile);
+                                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,device_group);
+                                    Intent intent =  new Intent(context, MainActivity.class);
+                                    context.startActivity(intent);
+                                    Log.d("Realm Profile","Updated");
+                                }
+                                Log.d("Id", String.valueOf(device_id));
+                                Log.d("Name", String.valueOf(device_name));
+                                Log.d("Group", String.valueOf(device_group));
                             } else {
-                                Log.d("Failure ", "Device details not updated");
+                                Log.d("Failure ", message);
+                            }
+                        } catch (JSONException je) {
+                            je.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("onErrorResponse: ", error.toString());
+                    }
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> parameter = new HashMap<>();
+                        parameter.put("Content-Type", "application/json");
+                        return parameter;
+                    }
+
+                    @Override
+                    public byte[] getBody() throws AuthFailureError {
+                        try {
+                            return request == null ? null : request.getBytes("utf-8");
+                        } catch (UnsupportedEncodingException uee) {
+                            VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", request, "utf-8");
+                            return null;
+                        }
+                    }
+                };
+                queue.add(stringRequest);
+            } catch (JSONException je) {
+                je.printStackTrace();
+            }
+        } else {
+            Log.d("Network Status", "Not connected");
+        }
+    }
+
+    //Download wallpaper if uploaded by user
+    public void downloadWallpaper(String fileName){
+        Uri uri = Uri.parse(AppConfig.WALLPAPER_URI + fileName);
+        DownloadManager.Request request = new DownloadManager.Request(uri);
+        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
+        request.setVisibleInDownloadsUi(false);
+        String taglockPath = "/.taglock/";
+        request.setDestinationInExternalPublicDir(taglockPath, uri.getLastPathSegment());
+        DownloadManager downloadManager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
+        wallId = downloadManager.enqueue(request);
+        PreferenceHelper.setValueString(context,AppConfig.TAGLOCK_DOWN_ID,String.valueOf(wallId));
+        DownloadManager.Query query = null;
+        query = new DownloadManager.Query();
+        Cursor cursor = null;
+        if (query != null) {
+            query.setFilterByStatus(DownloadManager.STATUS_FAILED | DownloadManager.STATUS_SUCCESSFUL | DownloadManager.STATUS_PAUSED |
+                    DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING);
+        }
+        cursor = downloadManager.query(query);
+        if (cursor.moveToFirst()) {
+            int status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
+            if (status == DownloadManager.STATUS_FAILED) {
+                PreferenceHelper.setValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS, false);
+                if (isNetworkConnected()) {
+                    Log.d("Network Status", "Connected");
+                } else {
+                    Log.d("Network Status", "No network");
+                }
+            }
+        }
+    }
+
+    //Receiver for completion of download
+    public BroadcastReceiver downloadReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            if (id == wallId) {
+                PreferenceHelper.setValueBoolean(context, AppConfig.WALLPAPER_DOWN_STATUS, true);
+            }
+        }
+    };
+
+    //Session management
+    public void deviceSession(final DeviceInformation deviceInformation) {
+        if (isNetworkConnected()) {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("device_name", deviceInformation.getDevice_name());
+                jsonObject.put("device_group", deviceInformation.getDevice_group());
+                jsonObject.put("hdmi_status", deviceInformation.getHdmi_status());
+                jsonObject.put("device_locked", deviceInformation.getDevice_locked_status());
+                final String request = jsonObject.toString();
+                RequestQueue queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.SESSION_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response);
+                            String res = jsonObject.getString("status");
+                            String message = jsonObject.getString("message");
+                            if (res.equals("201")) {
+                                Log.d("Session Success", message);
+                            } else {
+                                Log.d("Session Failure ", message);
                             }
                         } catch (JSONException je) {
                             je.printStackTrace();
@@ -683,12 +867,14 @@ public class TaglockDeviceInfo {
         return String.format("%d.%d.%d.%d", (data & 0xff), (data >> 8 & 0xff), (data >> 16 & 0xff), (data >> 24 & 0xff));
     }
 
+    //Get basic device information
     public DeviceInformation deviceData(){
         superClass = new SuperClass(context);
         String ip, versionName;
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
         final String pack = getProfile.get(0).getApp_package_name();
+
         DeviceInformation deviceInformation = new DeviceInformation();
         if (isWifiConnected()){
             Integer ipAddress = getIpAddress();
@@ -702,7 +888,7 @@ public class TaglockDeviceInfo {
         String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
         String taglockVersion = TaglockDeviceInfo.getVersion(context,context.getPackageName());
         Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
-        versionName = PreferenceHelper.getString(context, AppConfig.APK_VERSION);
+        versionName = getVersion(context,pack);
         deviceInformation.setLatitudes(latitude);
         deviceInformation.setLongitudes(longitude);
         deviceInformation.setIp_Address(ip);
@@ -715,13 +901,12 @@ public class TaglockDeviceInfo {
         deviceInformation.setUpdated_at(String.valueOf(epoch));
         boolean deviceStatus = PreferenceHelper.getValueBoolean(context,AppConfig.IS_ACTIVE);
         deviceInformation.setDevice_locked_status(deviceStatus);
-        String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
-        String device_group = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
         boolean app_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.APK_DOWN_STATUS);
         boolean taglock_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS);
-        deviceInformation.setDevice_name(device_name);
-        deviceInformation.setDevice_group(device_group);
-        deviceInformation.setHdmi_status(true);
+        boolean hdmi_status = HdmiListener.state;
+//        deviceInformation.setDevice_name(device_name);
+//        deviceInformation.setDevice_group(device_group);
+        deviceInformation.setHdmi_status(hdmi_status);
         deviceInformation.setDefault_apk_version(versionName);
         deviceInformation.setTaglock_version(taglockVersion);
         deviceInformation.setApp_download_status(app_down_status);
@@ -729,6 +914,7 @@ public class TaglockDeviceInfo {
         return deviceInformation;
     }
 
+    //Update details of the device
     public DeviceInformation updateDetails(){
         superClass = new SuperClass(context);
         String ip, versionName;
@@ -777,9 +963,10 @@ public class TaglockDeviceInfo {
         String device_group = PreferenceHelper.getValueString(context, AppConfig.DEVICE_GROUP);
         boolean app_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.APK_DOWN_STATUS);
         boolean taglock_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS);
+        boolean hdmi_status = HdmiListener.state;
         deviceInformation.setDevice_name(device_name);
         deviceInformation.setDevice_group(device_group);
-        deviceInformation.setHdmi_status(true);
+        deviceInformation.setHdmi_status(hdmi_status);
         deviceInformation.setDefault_apk_version(versionName);
         deviceInformation.setTaglock_version(taglockVersion);
         deviceInformation.setApp_download_status(app_down_status);
@@ -787,6 +974,7 @@ public class TaglockDeviceInfo {
         return deviceInformation;
     }
 
+    //Get version of the mentioned package
     public static String getVersion(Context context1,String packageName) {
         String versionName = "";
         try {
@@ -798,6 +986,7 @@ public class TaglockDeviceInfo {
         return versionName;
     }
 
+    //To switch the navigation
     public void switchNav(){
         superClass = new SuperClass(context);
         boolean is_visible = PreferenceHelper.getValueBoolean(context, AppConfig.IS_NAV_VISIBLE);
@@ -862,8 +1051,7 @@ public class TaglockDeviceInfo {
         superClass.showNavToggle();
         PreferenceHelper.setValueBoolean(context, AppConfig.IS_ACTIVE, false);
         deviceInformation.setDevice_locked_status(false);
-        deviceInformation.setDevice_name(deviceName);
-        deviceInfoController.updateTaglockStatus(deviceName, false);
+        deviceInfoController.updateTaglockStatus(deviceInformation);
         updateDevice(deviceInformation);
         superClass.unHideDefaultLauncher(packageName);
         SuperClass.disableActivity(context);

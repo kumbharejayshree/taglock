@@ -1,5 +1,6 @@
 package com.tagloy.taglock.services;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -18,6 +19,7 @@ import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
+    Context mContext;
     private static final String TAG = "MyFirebaseMessagingServ";
     SuperClass superClass = new SuperClass(this);
     TaglockDeviceInfo taglockDeviceInfo = new TaglockDeviceInfo(this);
@@ -25,6 +27,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
+        mContext = this;
         final RemoteMessage message = remoteMessage;
         final String apk_name = "apkmanagement/" + PreferenceHelper.getValueString(this,AppConfig.APK_NAME);
         final String taglock_apk = "taglockmanagement/" + PreferenceHelper.getValueString(this,AppConfig.TAGLOCK_APK);
@@ -56,6 +59,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                             break;
                         case "refresh":
                             taglockDeviceInfo.switchNav();
+                            break;
+                        case "unlock":
+                            PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_LOCKED,false);
                             break;
                         case "installtag":
                             new MainActivity.InstallApp(getApplicationContext(),taglock_apk).execute();

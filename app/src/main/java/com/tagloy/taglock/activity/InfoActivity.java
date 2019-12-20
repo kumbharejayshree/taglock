@@ -36,7 +36,7 @@ import io.realm.RealmResults;
 
 public class InfoActivity extends AppCompatActivity {
 
-    TextView deviceNameText,taglockText,appNameText,ipText,wifiMacText,lanMacText,storageText,connectionText,
+    TextView deviceNameText,deviceGroupText,taglockText,appNameText,ipText,wifiMacText,lanMacText,storageText,connectionText,
     connectivityText, orientationText ,changeOrientationText; //timeZoneText, changeTimeZoneText;
     TaglockDeviceInfo taglockDeviceInfo;
     SuperClass superClass;
@@ -54,6 +54,7 @@ public class InfoActivity extends AppCompatActivity {
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         superClass = new SuperClass(this);
         deviceNameText = findViewById(R.id.device_name_text);
+        deviceGroupText = findViewById(R.id.device_group_text);
         taglockText = findViewById(R.id.taglock_text);
         appNameText = findViewById(R.id.appname_text);
         connectionText = findViewById(R.id.connection_text);
@@ -69,7 +70,9 @@ public class InfoActivity extends AppCompatActivity {
         manager = getPackageManager();
 
         String deviceName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_NAME);
-        deviceNameText.setText(deviceName);
+        deviceNameText.append(" " + deviceName);
+        String deviceGroup = PreferenceHelper.getValueString(this, AppConfig.DEVICE_GROUP);
+        deviceGroupText.append(" " + deviceGroup);
 
 
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
@@ -99,10 +102,10 @@ public class InfoActivity extends AppCompatActivity {
 //        changeTimeZoneText.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View v) {
-////                Toast.makeText(context, "Changed!", Toast.LENGTH_LONG).show();
-////                taglockDeviceInfo.setTimeZone("Asia/Kolkata");
-////                Intent intent = new Intent(Settings.DAT);
-////                startActivity(intent);
+//                Toast.makeText(context, "Changed!", Toast.LENGTH_LONG).show();
+//                taglockDeviceInfo.setTimeZone("Asia/Kolkata");
+//                Intent intent = new Intent(Settings.DAT);
+//                startActivity(intent);
 //            }
 //        });
 
