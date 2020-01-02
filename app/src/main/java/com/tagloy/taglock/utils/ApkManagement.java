@@ -83,7 +83,7 @@ public class ApkManagement {
                                     TaglockDeviceInfo.deleteDir(dir);
                                     downloadApk(apk_name);
                                 } else {
-                                    Log.d("File Status", "Not downloaded");
+                                    Log.d("App Status", "Not downloaded");
                                 }
                             } else {
                                 PreferenceHelper.setValueString(context, AppConfig.APK_NAME, apk_name);
@@ -98,7 +98,7 @@ public class ApkManagement {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Status: ", "Failed to get apk");
+                        Log.d("App Status", "Failed to get apk");
                     }
                 }) {
                     @Override
@@ -157,7 +157,7 @@ public class ApkManagement {
                                 TaglockDeviceInfo.deleteDir(dir);
                                 downloadTaglock(apk_name);
                             } else {
-                                Log.d("File Status", "Not downloaded");
+                                Log.d("Taglock Status", "Not downloaded");
                             }
                         } catch (JSONException je) {
                             je.printStackTrace();
@@ -166,7 +166,7 @@ public class ApkManagement {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("Status: ", "Failed to get apk");
+                        Log.d("Taglock Status", "Failed to get apk");
                     }
                 }) {
                     @Override

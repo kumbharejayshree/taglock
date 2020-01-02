@@ -2,7 +2,6 @@ package com.tagloy.taglock.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
@@ -12,10 +11,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -29,9 +26,9 @@ import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -53,6 +50,7 @@ import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmcontrollers.DeviceInfoController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
 import com.tagloy.taglock.realmmodels.DeviceInformation;
+import com.tagloy.taglock.receiver.HdmiListener;
 import com.tagloy.taglock.receiver.RecentAppClickReceiver;
 import com.tagloy.taglock.utils.ApkManagement;
 import com.tagloy.taglock.utils.AppConfig;
@@ -101,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     TimerTask updateTimerTask, wifiTimerTask;
     CountDownTimer updateCountDownTimer, appCountDownTimer;
     ApkManagement apkManagement;
+    boolean isDefaultInstalled;
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
     @Override
@@ -128,9 +127,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
         final String pack = getProfile.get(0).getApp_package_name();
         app_call_duration = getProfile.get(0).getDefault_apk_call_duration();
+        //Log the Fabric user
         logUser();
         String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
-        boolean isDefaultInstalled = superClass.appInstalled(pack);
+        isDefaultInstalled = superClass.appInstalled(pack);
         if (isDefaultInstalled) {
             versionName = TaglockDeviceInfo.getVersion(this,pack);
             PreferenceHelper.setValueString(context,AppConfig.APK_VERSION,versionName);
@@ -147,10 +147,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
 
         //If debugging is enabled, then disable it
-//        if(Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1) {
-//            // debugging enabled
-//            superClass.switchDebugging(0);
-//        }
+        if(Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1) {
+            // debugging enabled
+            superClass.switchDebugging(0);
+        }
 
         //Checking if app is running at time interval of given time
         appCountDownTimer = new CountDownTimer(app_call_duration * 1000, 1000) {
@@ -169,13 +169,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         };
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
-        superClass.hideDefaultLauncher(packageName);
         superClass.hideNavToggle();
         if (Build.VERSION.SDK_INT>=23)
             taglockDeviceInfo.hideStatusBar();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
+        //Get location provider
         provider = locationManager.getBestProvider(criteria, true);
         if (provider != null && !provider.equals("")) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -194,6 +193,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 wifiManager.setWifiEnabled(true);
             }
         }
+        String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
+        superClass.hideDefaultLauncher(packageName);
         String wallpaper = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
         if (wallpaper == null){
             wallapaperImage.setBackgroundColor(getResources().getColor(R.color.blackWall));
@@ -209,16 +210,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 }
             }
         }
-        deviceInformation = taglockDeviceInfo.updateDetails();
-        deviceData = taglockDeviceInfo.deviceData();
-        taglockDeviceInfo.deviceDetails(deviceInformation);
-        boolean realmDevice = deviceInfoController.isDeviceAvailable();
-        if (realmDevice) {
-            deviceInfoController.updateDeviceData(deviceInformation);
-        } else {
-            deviceInfoController.addDeviceData(deviceInformation);
-        }
-
+        deviceInformation = taglockDeviceInfo.deviceData();
+        deviceData = taglockDeviceInfo.updateDetails();
         boolean isActive = PreferenceHelper.getValueBoolean(this,AppConfig.IS_ACTIVE);
         //If default app is installed, open it
         if (isDefaultInstalled) {
@@ -231,8 +224,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 stopUpdateTimer();
                 stopWifiTimer();
             }
-            taglockDeviceInfo.updateDevice(deviceData);
-//            taglockDeviceInfo.deviceSession(deviceData);
         } else {
             //Else download default app
             PreferenceHelper.removeStringValue(this, AppConfig.APK_NAME);
@@ -261,6 +252,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         registerReceiver(taglockDeviceInfo.downloadReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        taglockDeviceInfo.deviceDetails(deviceInformation);
+        boolean realmDevice = deviceInfoController.isDeviceAvailable();
+        if (realmDevice) {
+            deviceInfoController.updateDeviceData(deviceInformation);
+        } else {
+            deviceInfoController.addDeviceData(deviceInformation);
+        }
+        String version = PreferenceHelper.getString(context,AppConfig.APK_VERSION);
+        deviceData.setDefault_apk_version(version);
+        taglockDeviceInfo.updateDevice(deviceData);
+    }
+
+    //Get the network switch and change info accordingly
     private BroadcastReceiver connectionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -365,6 +373,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         updateTimerTask = new TimerTask() {
             @Override
             public void run() {
+                String latitude = PreferenceHelper.getValueString(context, AppConfig.LATITUDE);
+                String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
+                String taglockVersion = TaglockDeviceInfo.getVersion(context,context.getPackageName());
+                String version = PreferenceHelper.getString(context,AppConfig.APK_VERSION);
+                boolean app_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.APK_DOWN_STATUS);
+                boolean taglock_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS);
+                boolean hdmi_status = HdmiListener.state;
+                deviceData.setHdmi_status(hdmi_status);
+                deviceData.setTaglock_version(taglockVersion);
+                deviceData.setApp_download_status(app_down_status);
+                deviceData.setTaglock_download_status(taglock_down_status);
+                deviceData.setLatitudes(latitude);
+                deviceData.setLongitudes(longitude);
+                deviceData.setTaglock_version(taglockVersion);
+                deviceData.setDefault_apk_version(version);
                 taglockDeviceInfo.updateDevice(deviceData);
             }
         };
@@ -455,24 +478,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    //Menu inflater
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
+    //On activity pause
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(connectionReceiver);
     }
 
+    //On activity resume
     @Override
     protected void onResume() {
         super.onResume();
         registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
+    //Function to Exit Taglock
     public void exitTag(){
         stopUpdateTimer();
         appCountDownTimer.cancel();
@@ -481,6 +508,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         finish();
     }
 
+    //On menu item selected
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
@@ -565,11 +593,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 break;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    public static boolean isCallable(Activity activity, Intent intent) {
-        List<ResolveInfo> list = activity.getPackageManager().queryIntentActivities(intent,PackageManager.MATCH_DEFAULT_ONLY);
-        return list.size() > 0;
     }
 
     @Override

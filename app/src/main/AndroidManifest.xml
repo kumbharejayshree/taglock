@@ -122,7 +122,7 @@
             android:parentActivityName=".activity.MainActivity" />
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.tagloy.taglock.provider"
             android:exported="false"
             android:grantUriPermissions="true"
@@ -178,6 +178,12 @@
             android:name=".services.DownloadService"
             android:enabled="true"
             android:exported="false" />
+
+        <service
+            android:name=".services.UpdateService"
+            android:enabled="true"
+            android:exported="false" />
+
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

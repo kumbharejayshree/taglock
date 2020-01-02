@@ -13,8 +13,8 @@ import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
-import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -30,14 +30,12 @@ import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.SuperClass;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
-import java.util.TimeZone;
-
 import io.realm.RealmResults;
 
 public class InfoActivity extends AppCompatActivity {
 
     TextView deviceNameText,deviceGroupText,taglockText,appNameText,ipText,wifiMacText,lanMacText,storageText,connectionText,
-    connectivityText, orientationText ,changeOrientationText; //timeZoneText, changeTimeZoneText;
+    connectivityText, orientationText ,changeOrientationText, orientationTextView; //timeZoneText, changeTimeZoneText;
     TaglockDeviceInfo taglockDeviceInfo;
     SuperClass superClass;
     ApplicationInfo app;
@@ -65,6 +63,7 @@ public class InfoActivity extends AppCompatActivity {
         storageText = findViewById(R.id.storage_text);
         orientationText = findViewById(R.id.orientation_text);
         changeOrientationText = findViewById(R.id.change_text);
+        orientationTextView = findViewById(R.id.orientationTextView);
 //        timeZoneText = findViewById(R.id.timeZoneText);
 //        changeTimeZoneText = findViewById(R.id.changeTimeZoneText);
         manager = getPackageManager();
@@ -152,6 +151,15 @@ public class InfoActivity extends AppCompatActivity {
             // In portrait
             orientationText.append(" Portrait");
         }
+
+//        orientationTextView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent rotationIntent = new Intent();
+//                rotationIntent.setClassName("com.mbox.settings", "com.mbox.settings.MboxSettingActivity");
+//                startActivity(rotationIntent);
+//            }
+//        });
 
         final int passcode = getProfile.get(0).getClear_data_passcode();
         changeOrientationText.setOnClickListener(new View.OnClickListener() {

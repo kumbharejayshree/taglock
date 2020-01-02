@@ -1,9 +1,10 @@
 package com.tagloy.taglock.utils;
 
 public class AppConfig {
+    //URLs used in Taglock
 //    public static final String BASE_URL = "http://13.232.206.57";
-//    public static final String BASE_URL = "https://taglockapi.tagloy.com";
-    public static final String BASE_URL = "http://10.10.11.128/taglock_data";
+    public static final String BASE_URL = "https://taglockapi.tagloy.com";
+//    public static final String BASE_URL = "http://10.10.11.137/taglock_data";
     public static final String NAME_VALIDITY_URL = BASE_URL + "/device/validname";
     public static final String FCM_URL = BASE_URL + "/device/token";
     public static final String GROUP_URL = BASE_URL + "/groups/androidgroup";
@@ -23,8 +24,10 @@ public class AppConfig {
     public static final String TAGLOCK_URI = BASE_URL + "/upload/taglock/";
     public static final String WALLPAPER_URI = BASE_URL + "/upload/wallpaper/";
 
+    //Shared Preference
     public static final String TAGLOCK_PREF = "taglock_pref";
 
+    //Constants
     public static final String IS_ACTIVE = "taglock";
     public static final String IS_LOCKED = "is_locked";
     public static final String IS_NAV_VISIBLE = "nav";
@@ -50,4 +53,5 @@ public class AppConfig {
     public static final String LONGITUDE = "longitude";
     public static final String APP_DOWN_ID = "appid";
     public static final String TAGLOCK_DOWN_ID = "taglockid";
+    public static final String WALLPAPER_DOWN_ID = "wallid";
 }

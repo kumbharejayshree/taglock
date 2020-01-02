@@ -1,6 +1,5 @@
 package com.tagloy.taglock.realmcontrollers;
 
-import com.tagloy.taglock.models.DeviceInfo;
 import com.tagloy.taglock.realm.RealmController;
 import com.tagloy.taglock.realmmodels.DeviceInformation;
 
@@ -29,12 +28,8 @@ public class DeviceInfoController {
     public boolean isDeviceAvailable() {
         Realm realm = RealmController.getInstance().getRealm();
         RealmQuery<DeviceInformation> query = realm.where(DeviceInformation.class);
-        RealmResults<DeviceInformation> deviceInformations = query.findAll();
-        if(deviceInformations.size() > 0) {
-            return true;
-        }else{
-            return false;
-        }
+        RealmResults<DeviceInformation> deviceInformation = query.findAll();
+        return deviceInformation.size() > 0;
     }
 
     public void updateHDMI(boolean HDMIflag){

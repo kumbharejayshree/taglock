@@ -123,6 +123,18 @@ public class TaglockDeviceInfo {
         return false;
     }
 
+    //Get version of the mentioned package
+    public static String getVersion(Context context1,String packageName) {
+        String versionName = "";
+        try {
+            PackageInfo packageInfo = context1.getPackageManager().getPackageInfo(packageName, 0);
+            versionName = packageInfo.versionName;
+        } catch (PackageManager.NameNotFoundException pe) {
+            pe.printStackTrace();
+        }
+        return versionName;
+    }
+
     //To get device IP address for WiFI
     public Integer getIpAddress() {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -583,7 +595,7 @@ public class TaglockDeviceInfo {
                 jsonObject.put("ram", deviceInformation.getRam());
                 jsonObject.put("device_token", deviceInformation.getDevice_Token());
                 jsonObject.put("wifi_status", deviceInformation.getWifi_status());
-                jsonObject.put("updated_at", deviceInformation.getUpdated_at());
+                jsonObject.put("updated_at", String.valueOf(System.currentTimeMillis() / 1000));
                 final String request = jsonObject.toString();
                 RequestQueue queue = Volley.newRequestQueue(context);
                 StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.INSERT_DEVICE_URL, new Response.Listener<String>() {
@@ -690,13 +702,14 @@ public class TaglockDeviceInfo {
                                 String device_n = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
                                 String device_g = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
                                 String group_i = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
-                                Log.d("DG", device_g);
-                                Log.d("D group", device_group);
-                                if (group_i!= null && !group_i.equals(group_image)){
+                                if (group_i!= null){
                                     PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
                                     File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
                                     if(!imageFile.exists())
                                         downloadWallpaper(group_image);
+                                }else if(group_image != null){
+                                    PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+                                    downloadWallpaper(group_image);
                                 }
                                 if (!device_n.equals(device_name) || !device_g.equals(device_group)){
                                     deviceInformation1.setDevice_name(device_name);
@@ -719,8 +732,8 @@ public class TaglockDeviceInfo {
                                     Log.d("Realm Profile","Updated");
                                 }
                                 Log.d("Id", String.valueOf(device_id));
-                                Log.d("Name", String.valueOf(device_name));
-                                Log.d("Group", String.valueOf(device_group));
+                                Log.d("Name", device_name);
+                                Log.d("Group", device_group);
                             } else {
                                 Log.d("Failure ", message);
                             }
@@ -770,7 +783,7 @@ public class TaglockDeviceInfo {
         request.setDestinationInExternalPublicDir(taglockPath, uri.getLastPathSegment());
         DownloadManager downloadManager = (DownloadManager) context.getSystemService(DOWNLOAD_SERVICE);
         wallId = downloadManager.enqueue(request);
-        PreferenceHelper.setValueString(context,AppConfig.TAGLOCK_DOWN_ID,String.valueOf(wallId));
+        PreferenceHelper.setValueString(context,AppConfig.WALLPAPER_DOWN_ID,String.valueOf(wallId));
         DownloadManager.Query query = null;
         query = new DownloadManager.Query();
         Cursor cursor = null;
@@ -868,13 +881,9 @@ public class TaglockDeviceInfo {
     }
 
     //Get basic device information
-    public DeviceInformation deviceData(){
+    public DeviceInformation updateDetails(){
         superClass = new SuperClass(context);
-        String ip, versionName;
-        final DefaultProfileController defaultProfileController = new DefaultProfileController();
-        RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
-        final String pack = getProfile.get(0).getApp_package_name();
-
+        String ip;
         DeviceInformation deviceInformation = new DeviceInformation();
         if (isWifiConnected()){
             Integer ipAddress = getIpAddress();
@@ -886,9 +895,8 @@ public class TaglockDeviceInfo {
         }
         String latitude = PreferenceHelper.getValueString(context, AppConfig.LATITUDE);
         String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
-        String taglockVersion = TaglockDeviceInfo.getVersion(context,context.getPackageName());
+        String taglockVersion = getVersion(context,context.getPackageName());
         Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
-        versionName = getVersion(context,pack);
         deviceInformation.setLatitudes(latitude);
         deviceInformation.setLongitudes(longitude);
         deviceInformation.setIp_Address(ip);
@@ -897,17 +905,12 @@ public class TaglockDeviceInfo {
         deviceInformation.setStorage_memory(memory_details);
         boolean isWifiEnabled = checkWifi();
         deviceInformation.setWifi_status(isWifiEnabled);
-        long epoch = System.currentTimeMillis() / 1000;
-        deviceInformation.setUpdated_at(String.valueOf(epoch));
         boolean deviceStatus = PreferenceHelper.getValueBoolean(context,AppConfig.IS_ACTIVE);
         deviceInformation.setDevice_locked_status(deviceStatus);
         boolean app_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.APK_DOWN_STATUS);
         boolean taglock_down_status = PreferenceHelper.getValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS);
         boolean hdmi_status = HdmiListener.state;
-//        deviceInformation.setDevice_name(device_name);
-//        deviceInformation.setDevice_group(device_group);
         deviceInformation.setHdmi_status(hdmi_status);
-        deviceInformation.setDefault_apk_version(versionName);
         deviceInformation.setTaglock_version(taglockVersion);
         deviceInformation.setApp_download_status(app_down_status);
         deviceInformation.setTaglock_download_status(taglock_down_status);
@@ -915,12 +918,9 @@ public class TaglockDeviceInfo {
     }
 
     //Update details of the device
-    public DeviceInformation updateDetails(){
+    public DeviceInformation deviceData(){
         superClass = new SuperClass(context);
         String ip, versionName;
-        final DefaultProfileController defaultProfileController = new DefaultProfileController();
-        RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
-        final String pack = getProfile.get(0).getApp_package_name();
         DeviceInformation deviceInformation = new DeviceInformation();
         String mac = TaglockDeviceInfo.getMACAddress("wlan0");
         String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
@@ -934,7 +934,7 @@ public class TaglockDeviceInfo {
         }
         String latitude = PreferenceHelper.getValueString(context, AppConfig.LATITUDE);
         String longitude = PreferenceHelper.getValueString(context, AppConfig.LONGITUDE);
-        String taglockVersion = TaglockDeviceInfo.getVersion(context,context.getPackageName());
+        String taglockVersion = getVersion(context,context.getPackageName());
         Log.d("Location", "Lat: " + latitude + " Long: " + longitude);
         versionName = PreferenceHelper.getString(context, AppConfig.APK_VERSION);
         deviceInformation.setLatitudes(latitude);
@@ -955,8 +955,6 @@ public class TaglockDeviceInfo {
         deviceInformation.setAndroid_version(box_android);
         String box_api = getBoxApi();
         deviceInformation.setDevice_Api_version(box_api);
-        long epoch = System.currentTimeMillis() / 1000;
-        deviceInformation.setUpdated_at(String.valueOf(epoch));
         boolean deviceStatus = PreferenceHelper.getValueBoolean(context,AppConfig.IS_ACTIVE);
         deviceInformation.setDevice_locked_status(deviceStatus);
         String device_name = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
@@ -974,17 +972,6 @@ public class TaglockDeviceInfo {
         return deviceInformation;
     }
 
-    //Get version of the mentioned package
-    public static String getVersion(Context context1,String packageName) {
-        String versionName = "";
-        try {
-            PackageInfo packageInfo = context1.getPackageManager().getPackageInfo(packageName, 0);
-            versionName = packageInfo.versionName;
-        } catch (PackageManager.NameNotFoundException pe) {
-            pe.printStackTrace();
-        }
-        return versionName;
-    }
 
     //To switch the navigation
     public void switchNav(){
