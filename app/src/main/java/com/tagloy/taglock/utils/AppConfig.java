@@ -11,8 +11,8 @@ public class AppConfig {
     public static final String GROUP_VALIDITY_URL = BASE_URL + "/groups/validgroup";
     public static final String PROFILE_URL = BASE_URL + "/device/deviceprofile";
     public static final String INSERT_DEVICE_URL = BASE_URL + "/device/androiddevice";
-//    public static final String UPDATE_DEVICE_URL = BASE_URL + "/device/androidupdate";
-    public static final String UPDATE_DEVICE_URL = BASE_URL + "/device/deviceupdate";
+    public static final String UPDATE_DEVICENAME_URL = BASE_URL + "/device/androidupdate";
+    public static final String UPDATE_DEVICEID_URL = BASE_URL + "/device/deviceupdate";
     public static final String SESSION_URL = BASE_URL + "/device/session";
     public static final String CREDENTIALS_URL = BASE_URL + "/credentials/getcred";
 //    public static final String GET_APK_URL = BASE_URL + "/apk/getapk";

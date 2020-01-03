@@ -147,10 +147,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
 
         //If debugging is enabled, then disable it
-        if(Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1) {
-            // debugging enabled
-            superClass.switchDebugging(0);
-        }
+//        if(Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1) {
+//            // debugging enabled
+//            superClass.switchDebugging(0);
+//        }
 
         //Checking if app is running at time interval of given time
         appCountDownTimer = new CountDownTimer(app_call_duration * 1000, 1000) {

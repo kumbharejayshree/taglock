@@ -25,8 +25,8 @@ android {
         applicationId "com.tagloy.taglock"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 17
-        versionName "1.1.1731122019"
+        versionCode 18
+        versionName "1.1.1803012020"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

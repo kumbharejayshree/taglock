@@ -654,9 +654,19 @@ public class TaglockDeviceInfo {
         final DefaultProfile defaultProfile = new DefaultProfile();
         if (isNetworkConnected()) {
             try {
-                int id = PreferenceHelper.getValueInt(context,AppConfig.DEVICE_ID);
+                final int id = PreferenceHelper.getInt(context,AppConfig.DEVICE_ID);
+                String device_name = PreferenceHelper.getString(context,AppConfig.DEVICE_NAME);
+                String device_group = PreferenceHelper.getString(context,AppConfig.DEVICE_GROUP);
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("id",id);
+                String url;
+                if (id != 0){
+                    jsonObject.put("id",id);
+                    url = AppConfig.UPDATE_DEVICEID_URL;
+                }else {
+                    jsonObject.put("device_name",device_name);
+                    jsonObject.put("device_group", device_group);
+                    url = AppConfig.UPDATE_DEVICENAME_URL;
+                }
 //                jsonObject.put("device_name", deviceInformation.getDevice_name());
 //                jsonObject.put("device_group", deviceInformation.getDevice_group());
                 jsonObject.put("latitude", deviceInformation.getLatitudes());
@@ -680,7 +690,7 @@ public class TaglockDeviceInfo {
                 jsonObject.put("updated_at", String.valueOf(System.currentTimeMillis() / 1000));
                 final String request = jsonObject.toString();
                 RequestQueue queue = Volley.newRequestQueue(context);
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.UPDATE_DEVICE_URL, new Response.Listener<String>() {
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
@@ -689,51 +699,59 @@ public class TaglockDeviceInfo {
                             String message = jsonObject.getString("message");
                             if (res.equals("200")) {
                                 Log.d("Success ", message);
-                                String result = jsonObject.getString("result");
-                                JSONObject resultObject = new JSONObject(result);
-                                int device_id = resultObject.getInt("id");
-                                String device_name = resultObject.getString("device_name");
-                                String device_group = resultObject.getString("device_group");
-                                String group_image = resultObject.getString("group_image");
-                                int exit_passcode = resultObject.getInt("passcode");
-                                int clear_passcode = resultObject.getInt("clear_passcode");
-                                int call_duration = resultObject.getInt("default_apk_call");
-                                String package_name = resultObject.getString("apk_package");
-                                String device_n = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
-                                String device_g = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
-                                String group_i = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
-                                if (group_i!= null){
-                                    PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
-                                    File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
-                                    if(!imageFile.exists())
+                                if (id != 0){
+                                    String result = jsonObject.getString("result");
+                                    JSONObject resultObject = new JSONObject(result);
+                                    int device_id = resultObject.getInt("id");
+                                    String device_name = resultObject.getString("device_name");
+                                    String device_group = resultObject.getString("device_group");
+                                    String group_image = resultObject.getString("group_image");
+                                    int exit_passcode = resultObject.getInt("passcode");
+                                    int clear_passcode = resultObject.getInt("clear_passcode");
+                                    int call_duration = resultObject.getInt("default_apk_call");
+                                    String package_name = resultObject.getString("apk_package");
+                                    String device_n = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
+                                    String device_g = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
+                                    String group_i = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
+                                    if (group_i!= null){
+                                        PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+                                        File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
+                                        if(!imageFile.exists())
+                                            downloadWallpaper(group_image);
+                                    }else if(group_image != null){
+                                        PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
                                         downloadWallpaper(group_image);
-                                }else if(group_image != null){
-                                    PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
-                                    downloadWallpaper(group_image);
+                                    }
+                                    if (!device_n.equals(device_name) || !device_g.equals(device_group)){
+                                        deviceInformation1.setDevice_name(device_name);
+                                        deviceInformation1.setDevice_group(device_group);
+                                        deviceInfoController.updateDevice(deviceInformation1);
+                                        PreferenceHelper.setValueString(context,AppConfig.DEVICE_NAME,device_name);
+                                        Log.d("Realm Device","Updated");
+                                    }
+                                    if (!device_g.equals(device_group)){
+                                        defaultProfile.setPasscode(exit_passcode);
+                                        defaultProfile.setGroup_name(device_group);
+                                        defaultProfile.setClear_data_passcode(clear_passcode);
+                                        defaultProfileController.updateProfile(defaultProfile);
+                                        defaultProfile.setDefault_apk_call_duration(call_duration);
+                                        defaultProfile.setApp_package_name(package_name);
+                                        defaultProfileController.updateProfileData(defaultProfile);
+                                        PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,device_group);
+                                        Intent intent =  new Intent(context, MainActivity.class);
+                                        context.startActivity(intent);
+                                        Log.d("Realm Profile","Updated");
+                                    }
+                                    Log.d("Id", String.valueOf(device_id));
+                                    Log.d("Name", device_name);
+                                    Log.d("Group", device_group);
+                                }else{
+                                    String result = jsonObject.getString("id");
+                                    JSONObject resultObject = new JSONObject(result);
+                                    int id = resultObject.getInt("id");
+                                    PreferenceHelper.setValueInt(context,AppConfig.DEVICE_ID,id);
                                 }
-                                if (!device_n.equals(device_name) || !device_g.equals(device_group)){
-                                    deviceInformation1.setDevice_name(device_name);
-                                    deviceInformation1.setDevice_group(device_group);
-                                    deviceInfoController.updateDevice(deviceInformation1);
-                                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_NAME,device_name);
-                                    Log.d("Realm Device","Updated");
-                                }
-                                if (!device_g.equals(device_group)){
-                                    defaultProfile.setPasscode(exit_passcode);
-                                    defaultProfile.setGroup_name(device_group);
-                                    defaultProfile.setClear_data_passcode(clear_passcode);
-                                    defaultProfileController.updateProfile(defaultProfile);
-                                    defaultProfile.setDefault_apk_call_duration(call_duration);
-                                    defaultProfile.setApp_package_name(package_name);
-                                    defaultProfileController.updateProfileData(defaultProfile);
-                                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,device_group);
-                                    Intent intent =  new Intent(context, MainActivity.class);
-                                    context.startActivity(intent);
-                                    Log.d("Realm Profile","Updated");
-                                }
-                                Log.d("Id", String.valueOf(device_id));
-                                Log.d("Name", device_name);
-                                Log.d("Group", device_group);
+
                             } else {
                                 Log.d("Failure ", message);
                             }
