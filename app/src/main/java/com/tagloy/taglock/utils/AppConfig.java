@@ -2,9 +2,19 @@ package com.tagloy.taglock.utils;
 
 public class AppConfig {
     //URLs used in Taglock
+
+    //Preprod base URL for Taglock
 //    public static final String BASE_URL = "http://13.232.206.57";
-    public static final String BASE_URL = "https://taglockapi.tagloy.com";
+
+    //Prod base URL for Taglock
+//    public static final String BASE_URL = "https://taglockapi.tagloy.com";
+
+    //Teleperfomance base URL for Taglock
+    public static final String BASE_URL = "https://telelockapi.tagcx.com";
+
+    //Localhost base URL
 //    public static final String BASE_URL = "http://10.10.11.137/taglock_data";
+
     public static final String NAME_VALIDITY_URL = BASE_URL + "/device/validname";
     public static final String FCM_URL = BASE_URL + "/device/token";
     public static final String GROUP_URL = BASE_URL + "/groups/androidgroup";

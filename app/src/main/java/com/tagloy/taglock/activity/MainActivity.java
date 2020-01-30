@@ -212,6 +212,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         deviceInformation = taglockDeviceInfo.deviceData();
         deviceData = taglockDeviceInfo.updateDetails();
+
+        taglockDeviceInfo.deviceDetails(deviceInformation);
         boolean isActive = PreferenceHelper.getValueBoolean(this,AppConfig.IS_ACTIVE);
         //If default app is installed, open it
         if (isDefaultInstalled) {
@@ -256,7 +258,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     protected void onStart() {
         super.onStart();
 
-        taglockDeviceInfo.deviceDetails(deviceInformation);
         boolean realmDevice = deviceInfoController.isDeviceAvailable();
         if (realmDevice) {
             deviceInfoController.updateDeviceData(deviceInformation);
@@ -279,10 +280,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             NetworkInfo networkInfo = cm.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED){
                 if (taglockDeviceInfo.isWifiConnected()){
-                    Integer ipAddress = taglockDeviceInfo.getIpAddress();
+                    Integer ipAddress = taglockDeviceInfo.getWifiIp();
                     ip = taglockDeviceInfo.intToIp(ipAddress);
                 }else if (taglockDeviceInfo.isEthernetConnected()){
-                    ip = taglockDeviceInfo.getIp();
+                    ip = taglockDeviceInfo.getLANIp();
                 }else {
                     ip = "NA";
                 }

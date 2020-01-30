@@ -119,10 +119,10 @@ public class InfoActivity extends AppCompatActivity {
         String mac = TaglockDeviceInfo.getMACAddress("wlan0");
         String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
         if (taglockDeviceInfo.isWifiConnected()){
-            Integer ipAddress = taglockDeviceInfo.getIpAddress();
+            Integer ipAddress = taglockDeviceInfo.getWifiIp();
             ip = taglockDeviceInfo.intToIp(ipAddress);
         }else if (taglockDeviceInfo.isEthernetConnected()){
-            ip = taglockDeviceInfo.getIp();
+            ip = taglockDeviceInfo.getLANIp();
         }else {
             ip = "NA";
         }
@@ -229,10 +229,10 @@ public class InfoActivity extends AppCompatActivity {
             NetworkInfo networkInfo = cm.getActiveNetworkInfo();
             if (networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED){
                 if (taglockDeviceInfo.isWifiConnected()){
-                    Integer ipAddress = taglockDeviceInfo.getIpAddress();
+                    Integer ipAddress = taglockDeviceInfo.getWifiIp();
                     ip = taglockDeviceInfo.intToIp(ipAddress);
                 }else if (taglockDeviceInfo.isEthernetConnected()){
-                    ip = taglockDeviceInfo.getIp();
+                    ip = taglockDeviceInfo.getLANIp();
                 }else {
                     ip = "NA";
                 }

@@ -136,14 +136,14 @@ public class TaglockDeviceInfo {
     }
 
     //To get device IP address for WiFI
-    public Integer getIpAddress() {
+    public Integer getWifiIp() {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         return wifiInfo.getIpAddress();
     }
 
     //To get device IP address for LAN
-    public String getIp(){
+    public String getLANIp(){
         String ipAddress = null;
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
@@ -727,6 +727,7 @@ public class TaglockDeviceInfo {
                                         deviceInformation1.setDevice_group(device_group);
                                         deviceInfoController.updateDevice(deviceInformation1);
                                         PreferenceHelper.setValueString(context,AppConfig.DEVICE_NAME,device_name);
+                                        PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,device_group);
                                         Log.d("Realm Device","Updated");
                                     }
                                     if (!device_g.equals(device_group)){
@@ -738,8 +739,6 @@ public class TaglockDeviceInfo {
                                         defaultProfile.setApp_package_name(package_name);
                                         defaultProfileController.updateProfileData(defaultProfile);
                                         PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,device_group);
-                                        Intent intent =  new Intent(context, MainActivity.class);
-                                        context.startActivity(intent);
                                         Log.d("Realm Profile","Updated");
                                     }
                                     Log.d("Id", String.valueOf(device_id));
@@ -904,10 +903,10 @@ public class TaglockDeviceInfo {
         String ip;
         DeviceInformation deviceInformation = new DeviceInformation();
         if (isWifiConnected()){
-            Integer ipAddress = getIpAddress();
+            Integer ipAddress = getWifiIp();
             ip = intToIp(ipAddress);
         }else if (isEthernetConnected()){
-            ip = getIp();
+            ip = getLANIp();
         }else {
             ip = "NA";
         }
@@ -943,10 +942,10 @@ public class TaglockDeviceInfo {
         String mac = TaglockDeviceInfo.getMACAddress("wlan0");
         String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
         if (isWifiConnected()){
-            Integer ipAddress = getIpAddress();
+            Integer ipAddress = getWifiIp();
             ip = intToIp(ipAddress);
         }else if (isEthernetConnected()){
-            ip = getIp();
+            ip = getLANIp();
         }else {
             ip = "NA";
         }
