@@ -713,6 +713,10 @@ public class TaglockDeviceInfo {
                                     String device_n = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
                                     String device_g = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
                                     String group_i = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
+                                    defaultProfile.setPasscode(exit_passcode);
+                                    defaultProfile.setClear_data_passcode(clear_passcode);
+                                    defaultProfile.setDefault_apk_call_duration(call_duration);
+                                    defaultProfileController.updatePasscodes(defaultProfile);
                                     if (group_i!= null){
                                         PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
                                         File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
@@ -731,8 +735,8 @@ public class TaglockDeviceInfo {
                                         Log.d("Realm Device","Updated");
                                     }
                                     if (!device_g.equals(device_group)){
-                                        defaultProfile.setPasscode(exit_passcode);
                                         defaultProfile.setGroup_name(device_group);
+                                        defaultProfile.setPasscode(exit_passcode);
                                         defaultProfile.setClear_data_passcode(clear_passcode);
                                         defaultProfileController.updateProfile(defaultProfile);
                                         defaultProfile.setDefault_apk_call_duration(call_duration);

@@ -94,6 +94,28 @@ public class DefaultProfileController {
         realm.commitTransaction();
     }
 
+    public void updatePasscodes(DefaultProfile mProfileData){
+        Realm realm = RealmController.getInstance().getRealm();
+
+        if (!realm.isInTransaction())
+            realm.beginTransaction();
+
+        DefaultProfile mProfiledataRealmClass = realm.where(DefaultProfile.class).findFirst();
+        if (mProfiledataRealmClass != null) {
+            mProfiledataRealmClass.setPasscode(mProfileData.getPasscode());
+        }
+        if (mProfiledataRealmClass != null) {
+            mProfiledataRealmClass.setClear_data_passcode(mProfileData.getClear_data_passcode());
+        }
+        if (mProfiledataRealmClass != null) {
+            mProfiledataRealmClass.setDefault_apk_call_duration(mProfileData.getDefault_apk_call_duration());
+        }
+        if (mProfiledataRealmClass != null) {
+            realm.copyToRealm(mProfiledataRealmClass);
+        }
+        realm.commitTransaction();
+    }
+
     public void updateProfileData(DefaultProfile mProfileData){
         Realm realm = RealmController.getInstance().getRealm();
 
@@ -103,6 +125,9 @@ public class DefaultProfileController {
         DefaultProfile mProfiledataRealmClass = realm.where(DefaultProfile.class).findFirst();//equalTo("group_name",group_name).findFirst();
         if (mProfiledataRealmClass != null) {
             mProfiledataRealmClass.setDefault_apk_call_duration(mProfileData.getDefault_apk_call_duration());
+        }
+        if (mProfiledataRealmClass != null) {
+            mProfiledataRealmClass.setApp_package_name(mProfileData.getApp_package_name());
         }
         if (mProfiledataRealmClass != null) {
             mProfiledataRealmClass.setApp_package_name(mProfileData.getApp_package_name());
