@@ -65,7 +65,6 @@ public class DeviceDetailActivity extends AppCompatActivity implements View.OnCl
                     String deviceName = deviceNameEdit.getText().toString();
                     String groupId = groupIdEdit.getText().toString();
                     taglockDeviceInfo.getGroup(groupId);
-//                    taglockDeviceInfo.getCreds();
                     taglockDeviceInfo.checkGroupKey(deviceName,groupId, groupKey);
                 }
         }

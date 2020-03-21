@@ -41,7 +41,6 @@ public class BootReceiver extends BroadcastReceiver {
         }
         if (!wStorage || !storage){
             superClass.enableStorage(context.getPackageName());
-            superClass.enableReadStorage(context.getPackageName());
         }
         boolean deviceStatus = SuperClass.isAppRunning(context, context.getPackageName());
         if (deviceStatus) {

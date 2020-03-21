@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.adapters.PermissionsAdapter;
@@ -101,10 +100,9 @@ public class AdminActivity extends AppCompatActivity {
                 superClass.enablePhoneState(getPackageName());
                 superClass.enableStorage(getPackageName());
                 superClass.enableReadContacts(getPackageName());
-                superClass.enableReadStorage(getPackageName());
             }
         } else {
-            Toast.makeText(AdminActivity.this, "Please grant admin permission", Toast.LENGTH_SHORT).show();
+            taglockDeviceInfo.showMessage("Please grant admin permission");
         }
 //        permissionListView.addFooterView(footerView);
         submitPermission = findViewById(R.id.submitPermission);
@@ -125,26 +123,26 @@ public class AdminActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case REQUEST_ENABLE:
-                    Toast.makeText(getApplicationContext(), "Admin permission granted", Toast.LENGTH_LONG).show();
+                    taglockDeviceInfo.showMessage("Admin permission granted");
                     finish();
                     startActivity(getIntent());
                     break;
                 case REQUEST_USAGE:
-                    Toast.makeText(getApplicationContext(), "Usage access granted", Toast.LENGTH_LONG).show();
+                    taglockDeviceInfo.showMessage("Usage access granted");
                     finish();
                     break;
                 case REQUEST_SETTING:
-                    Toast.makeText(getApplicationContext(), "Write settings permission granted", Toast.LENGTH_LONG).show();
+                    taglockDeviceInfo.showMessage("Write settings permission granted");
                     finish();
                     startActivity(getIntent());
                     break;
                 case REQUEST_OVERLAY:
-                    Toast.makeText(getApplicationContext(), "Overlay permission granted", Toast.LENGTH_LONG).show();
+                    taglockDeviceInfo.showMessage("Overlay permission granted");
                     finish();
                     startActivity(getIntent());
                     break;
                 case REQUEST_NOTIFICATION:
-                    Toast.makeText(getApplicationContext(), "Notification access granted", Toast.LENGTH_LONG).show();
+                    taglockDeviceInfo.showMessage("Overlay permission granted");
                     finish();
                     startActivity(getIntent());
                     break;
@@ -163,16 +161,16 @@ public class AdminActivity extends AppCompatActivity {
                     boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
                     boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
                     boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
-                    boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+                    boolean storage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
                     if (phone && location && contacts && camera && storage){
                         SuperClass.enableActivity(AdminActivity.this);
                         Intent intent = new Intent(AdminActivity.this,NetworkActivity.class);
                         startActivity(intent);
                     }else {
-                        Toast.makeText(AdminActivity.this,"Please grant all permissions! Click on GRANT.",Toast.LENGTH_SHORT).show();
+                        taglockDeviceInfo.showMessage("Please Grant root permission and restart the application!");
                     }
                 }else {
-                    Toast.makeText(AdminActivity.this,"Please grant admin permission",Toast.LENGTH_SHORT).show();
+                    taglockDeviceInfo.showMessage("Please grant admin permission");
                 }
             }
         });
@@ -182,7 +180,6 @@ public class AdminActivity extends AppCompatActivity {
         switch (requestCode) {
             case REQUEST_USAGE_ACCESS:
                 if (!isAccessGranted()) {
-                    //Toast.makeText(AdminActivity.this, "Usage access granted", Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);

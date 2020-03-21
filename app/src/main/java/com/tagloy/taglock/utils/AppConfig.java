@@ -7,13 +7,13 @@ public class AppConfig {
 //    public static final String BASE_URL = "http://13.232.206.57";
 
     //Prod base URL for Taglock
-//    public static final String BASE_URL = "https://taglockapi.tagloy.com";
+    public static final String BASE_URL = "https://taglockapi.tagloy.com";
 
     //Teleperfomance base URL for Taglock
-    public static final String BASE_URL = "https://telelockapi.tagcx.com";
+//    public static final String BASE_URL = "https://telelockapi.tagcx.com";
 
     //Localhost base URL
-//    public static final String BASE_URL = "http://10.10.11.137/taglock_data";
+//    public static final String BASE_URL = "http://192.168.1.102/taglock_data";
 
     public static final String NAME_VALIDITY_URL = BASE_URL + "/device/validname";
     public static final String FCM_URL = BASE_URL + "/device/token";

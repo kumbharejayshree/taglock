@@ -38,70 +38,67 @@ public class SplashActivity extends AppCompatActivity {
         PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_LOCKED,true);
         Handler handler = new Handler();
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (isMyPolicyActive()){
-                    boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
-                    boolean coarseLocation = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-                    boolean location = superClass.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-                    boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
-                    boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
-                    boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-                    boolean wContacts = superClass.checkPermission(Manifest.permission.WRITE_CONTACTS);
-                    boolean wStorage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                    if (phone && location && contacts && camera && storage && coarseLocation){
-                        SuperClass.enableActivity(mContext);
-                        String device_name = PreferenceHelper.getValueString(mContext,AppConfig.DEVICE_NAME);
-                        if (device_name != null){
-                            PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_ACTIVE,true);
-                            Intent intent = new Intent(mContext,MainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
-                            finish();
-                        }else{
-                            Intent intent = new Intent(mContext,NetworkActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
-                            finish();
-                        }
-                    }else {
-                        SuperClass.enableActivity(mContext);
+        handler.postDelayed(() -> {
+            if (isMyPolicyActive()){
+                SuperClass.enableActivity(mContext);
+                boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
+                boolean coarseLocation = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+                boolean location = superClass.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+                boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
+                boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
+                boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+                boolean wContacts = superClass.checkPermission(Manifest.permission.WRITE_CONTACTS);
+                boolean wStorage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                if (phone && location && contacts && camera && wStorage && coarseLocation){
+                    String device_name = PreferenceHelper.getValueString(mContext,AppConfig.DEVICE_NAME);
+                    if (device_name != null){
                         PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_ACTIVE,true);
-                        if (!phone){
-                            superClass.enablePhoneCalls(getPackageName());
-                            superClass.enablePhoneState(getPackageName());
-                        }
-                        if (!location || !coarseLocation){
-                            superClass.enableLocation(getPackageName());
-                            superClass.enableCoarseLocation(getPackageName());
-                        }
-                        if (!contacts || !wContacts){
-                            superClass.enableReadContacts(getPackageName());
-                            superClass.enableContacts(getPackageName());
-                        }
-                        if (!camera){
-                            superClass.enableCamera(getPackageName());
-                        }
-                        if (!wStorage){
-                            superClass.enableStorage(getPackageName());
-                            superClass.enableReadStorage(getPackageName());
-                        }
                         Intent intent = new Intent(mContext,MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        finish();
+                    }else{
+                        Intent intent = new Intent(mContext,NetworkActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         finish();
                     }
                 }else {
-                    PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_ACTIVE,false);
-                    Intent intent = new Intent(mContext,AdminActivity.class);
+                    PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_ACTIVE,true);
+                    if (!phone){
+                        superClass.enablePhoneCalls(getPackageName());
+                        superClass.enablePhoneState(getPackageName());
+                    }
+                    if (!location || !coarseLocation){
+                        superClass.enableLocation(getPackageName());
+                        superClass.enableCoarseLocation(getPackageName());
+                    }
+                    if (!contacts || !wContacts){
+                        superClass.enableReadContacts(getPackageName());
+                        superClass.enableContacts(getPackageName());
+                    }
+                    if (!camera){
+                        superClass.enableCamera(getPackageName());
+                    }
+                    if (!storage || !wStorage){
+                        superClass.enableStorage(getPackageName());
+                        superClass.enableReadStorage(getPackageName());
+                    }
+                    Intent intent = new Intent(mContext,MainActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     finish();
                 }
+            }else {
+                PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_ACTIVE,false);
+                Intent intent = new Intent(mContext,AdminActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
             }
         }, 3000);
     }
+
     public boolean isMyPolicyActive() {
         return devicePolicyManager.isAdminActive(devicePolicyAdmin);
     }

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentCallbacks2;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -87,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public static GridAdapter gridAdapter;
     RelativeLayout mainLayout;
     public static GridView appsGrid;
-    ImageView wallapaperImage;
+    ImageView wallpaperImage;
     TextView versionText, ipText;
     ApplicationInfo apps;
     String provider, ip, versionName;
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         downloadProgress = findViewById(R.id.downloadProgress);
         versionText = findViewById(R.id.versionText);
         ipText = findViewById(R.id.ipText);
-        wallapaperImage = findViewById(R.id.wallpaperImageView);
+        wallpaperImage = findViewById(R.id.wallpaperImageView);
         superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         apkManagement = new ApkManagement(this);
@@ -194,10 +195,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         }
         String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
-        superClass.hideDefaultLauncher(packageName);
+        if (SuperClass.isAppRunning(context,packageName)){
+            Log.d("App","Running");
+            superClass.hideDefaultLauncher(packageName);
+        }
         String wallpaper = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
         if (wallpaper == null){
-            wallapaperImage.setBackgroundColor(getResources().getColor(R.color.blackWall));
+            wallpaperImage.setBackgroundColor(getResources().getColor(R.color.blackWall));
             PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,"test");
             PreferenceHelper.setValueBoolean(context,AppConfig.WALLPAPER_DOWN_STATUS, false);
         } else {
@@ -206,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 File imageFile = new File("/storage/emulated/0/.taglock/" + wallpaper);
                 if (imageFile.exists()){
                     Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-                    wallapaperImage.setImageBitmap(bitmap);
+                    wallpaperImage.setImageBitmap(bitmap);
                 }
             }
         }
@@ -240,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             @Override
             public void onFinish() {
+                taglockDeviceInfo.getCreds();
                 apkManagement.getApk();
                 apkManagement.getTaglock();
                 start();
@@ -248,7 +253,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         updateCountDownTimer.start();
         IntentFilter mFilter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         registerReceiver(mReceiver, mFilter);
-        registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
         registerReceiver(apkManagement.downloadReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         registerReceiver(batteryInfo, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         registerReceiver(taglockDeviceInfo.downloadReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
@@ -257,7 +261,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @Override
     protected void onStart() {
         super.onStart();
-
         boolean realmDevice = deviceInfoController.isDeviceAvailable();
         if (realmDevice) {
             deviceInfoController.updateDeviceData(deviceInformation);
@@ -266,6 +269,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         String version = PreferenceHelper.getString(context,AppConfig.APK_VERSION);
         deviceData.setDefault_apk_version(version);
+        taglockDeviceInfo.getCreds();
         taglockDeviceInfo.updateDevice(deviceData);
     }
 
@@ -535,17 +539,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     if (TextUtils.isEmpty(alertEdit.getText())) {
-                                        Toast.makeText(context, "Please enter passcode", Toast.LENGTH_LONG).show();
+                                        taglockDeviceInfo.showMessage("Please enter passcode");
                                     } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
                                         exitTag();
                                     } else {
-                                        Toast.makeText(context, "Incorrect passcode!", Toast.LENGTH_LONG).show();
+                                        taglockDeviceInfo.showMessage("Incorrect passcode!");
                                         int count = PreferenceHelper.getValueInt(context, AppConfig.FAILED_COUNT);
                                         if (count>=5){
                                             SuperClass.clearData();
                                         }else {
                                             count = count + 1;
-                                            Toast.makeText(context, "Failed attempts: " + count, Toast.LENGTH_LONG).show();
+                                            taglockDeviceInfo.showMessage("Failed attempts: " + count);
                                             PreferenceHelper.setValueInt(context, AppConfig.FAILED_COUNT, count);
                                         }
                                     }
@@ -658,7 +662,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         @Override
         protected void onPreExecute() {
             Log.d("APK Status", "APK is installing...");
-            Toast.makeText(context,"Installing App in background...",Toast.LENGTH_LONG).show();
+            Toast.makeText(context,"Installing App in background...",Toast.LENGTH_SHORT).show();
         }
 
         @Override

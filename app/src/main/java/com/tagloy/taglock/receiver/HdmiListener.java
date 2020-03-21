@@ -27,11 +27,11 @@ public class HdmiListener extends BroadcastReceiver {
             if (state){
                 Log.d("HDMI", "Connected");
                 PreferenceHelper.setValueBoolean(context,AppConfig.HDMI_STATUS, true);
-                Toast.makeText(context,"HDMI connected",Toast.LENGTH_LONG).show();
+                taglockDeviceInfo.showMessage("HDMI connected");
             }else {
                 Log.d("HDMI", "Disconnected");
                 PreferenceHelper.setValueBoolean(context,AppConfig.HDMI_STATUS, false);
-                Toast.makeText(context,"HDMI disconnected",Toast.LENGTH_LONG).show();
+                taglockDeviceInfo.showMessage("HDMI disconnected");
             }
             deviceInformation.setHdmi_status(state);
             deviceInformation.setDevice_name(deviceName);

@@ -20,7 +20,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.adapters.WifiListAdapter;
@@ -80,7 +79,7 @@ public class NetworkActivity extends AppCompatActivity {
         wifiManager.startScan();
         if (!taglockDeviceInfo.isEthernetConnected()){
             if (!wifiManager.isWifiEnabled()){
-                Toast.makeText(this,"WiFi is disabled, Turning it on", Toast.LENGTH_LONG).show();
+                taglockDeviceInfo.showMessage("WiFi is disabled, Turning it on");
                 wifiManager.setWifiEnabled(true);
                 wifiManager.startScan();
             }
@@ -92,7 +91,7 @@ public class NetworkActivity extends AppCompatActivity {
                     Intent intent = new Intent(NetworkActivity.this,DeviceDetailActivity.class);
                     startActivity(intent);
                 }else {
-                    Toast.makeText(mContext,"Please connect to the network", Toast.LENGTH_LONG).show();
+                    taglockDeviceInfo.showMessage("Please connect to the network");
                 }
             }
         });
@@ -121,7 +120,7 @@ public class NetworkActivity extends AppCompatActivity {
                 wifiListAdapter = new WifiListAdapter(context,wifiScanResult);
                 wifiListView.setAdapter(wifiListAdapter);
             }else {
-                Toast.makeText(mContext,"No wifi results found", Toast.LENGTH_LONG).show();
+                taglockDeviceInfo.showMessage("No wifi results found");
             }
         }
     }
@@ -176,7 +175,7 @@ public class NetworkActivity extends AppCompatActivity {
                 String checkPassword = pass.getText().toString();
                 finallyConnect(checkPassword, wifiSSID);
                 dialog.dismiss();
-                Toast.makeText(NetworkActivity.this,"Connected to Network: " + wifiSSID, Toast.LENGTH_LONG).show();
+                taglockDeviceInfo.showMessage("Connected to Network: " + wifiSSID);
             }
         });
         dialog.show();

@@ -20,7 +20,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
@@ -175,13 +174,13 @@ public class InfoActivity extends AppCompatActivity {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 if (TextUtils.isEmpty(alertEdit.getText())) {
-                                    Toast.makeText(context, "Please enter passcode", Toast.LENGTH_LONG).show();
+                                    taglockDeviceInfo.showMessage("Please enter passcode");
                                 } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
                                     Intent rotationIntent = new Intent();
                                     rotationIntent.setClassName("com.android.tv.settings", "com.android.tv.settings.device.display.rotation.ScreenRotationActivity");
                                     startActivity(rotationIntent);
                                 } else {
-                                    Toast.makeText(context, "Incorrect passcode!", Toast.LENGTH_LONG).show();
+                                    taglockDeviceInfo.showMessage("Incorrect passcode!");
                                 }
                             }
                         })

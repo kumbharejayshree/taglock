@@ -3,6 +3,7 @@ package com.tagloy.taglock.services;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.tagloy.taglock.activity.MainActivity;
 import com.tagloy.taglock.utils.ApkManagement;

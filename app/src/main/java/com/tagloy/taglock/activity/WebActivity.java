@@ -13,17 +13,20 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import com.tagloy.taglock.R;
+import com.tagloy.taglock.utils.TaglockDeviceInfo;
 
 public class WebActivity extends AppCompatActivity {
 
     WebView webView;
     Context mContext;
+    TaglockDeviceInfo taglockDeviceInfo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_web);
         mContext = this;
         webView = findViewById(R.id.webView);
+        taglockDeviceInfo = new TaglockDeviceInfo(mContext);
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setLoadWithOverviewMode(true);
@@ -39,7 +42,7 @@ public class WebActivity extends AppCompatActivity {
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                Toast.makeText(WebActivity.this, "Your Internet Connection May not be active Or " + error , Toast.LENGTH_LONG).show();
+                taglockDeviceInfo.showMessage("Your Internet Connection May not be active Or " + error);
             }
         });
         webView.loadUrl("http://fast.com");

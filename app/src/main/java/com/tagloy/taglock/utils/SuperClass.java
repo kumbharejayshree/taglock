@@ -213,6 +213,16 @@ public class SuperClass {
         }
     }
 
+    //To enable read storage
+    public void enableReadStorage(String packageName){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.READ_EXTERNAL_STORAGE"});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
     //To enable contacts
     public void enableContacts(String packageName){
         try{
@@ -260,18 +270,6 @@ public class SuperClass {
             root.waitFor();
         }catch (IOException | InterruptedException ie){
             ie.printStackTrace();
-        }
-    }
-
-    //To enable read storage
-    public void enableReadStorage(String packageName){
-        try{
-            Process root = Runtime.getRuntime().exec(new String[]{"su","-c","pm grant " + packageName + " android.permission.READ_EXTERNAL_STORAGE"});
-            root.waitFor();
-        }catch (IOException ie){
-            ie.printStackTrace();
-        }catch (InterruptedException ine){
-            ine.printStackTrace();
         }
     }
 

@@ -23,7 +23,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.adapters.WifiListAdapter;
@@ -95,7 +94,7 @@ public class WifiActivity extends AppCompatActivity {
         });
         wifiManager.startScan();
         if (!wifiManager.isWifiEnabled()){
-            Toast.makeText(this,"WiFi is disabled, Turning it on", Toast.LENGTH_LONG).show();
+            taglockDeviceInfo.showMessage("WiFi is disabled, Turning it on");
             wifiManager.setWifiEnabled(true);
         }
         IntentFilter intentFilter = new IntentFilter();
@@ -126,14 +125,14 @@ public class WifiActivity extends AppCompatActivity {
                 wifiListAdapter = new WifiListAdapter(context,wifiScanResult);
                 wifiListView.setAdapter(wifiListAdapter);
             }else {
-                Toast.makeText(mContext,"No wifi results found", Toast.LENGTH_LONG).show();
+                taglockDeviceInfo.showMessage("No wifi results found");
             }
             String action  = intent.getAction();
             if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)){
                 NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
                 int error = intent.getIntExtra(WifiManager.EXTRA_SUPPLICANT_ERROR,-1);
                 if (error == WifiManager.ERROR_AUTHENTICATING){
-                    Toast.makeText(context,"Wrong Password",Toast.LENGTH_SHORT).show();
+                    taglockDeviceInfo.showMessage("Wrong Password");
                 }
             }
         }
@@ -161,7 +160,7 @@ public class WifiActivity extends AppCompatActivity {
         wifiManager.disconnect();
         wifiManager.enableNetwork(netId, true);
         if(!wifiManager.reconnect()){
-            Toast.makeText(mContext,"Wrong password", Toast.LENGTH_LONG).show();
+            taglockDeviceInfo.showMessage("Wrong password");
         }
         wifiListAdapter.notifyDataSetChanged();
     }
