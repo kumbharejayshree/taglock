@@ -2,6 +2,9 @@ package com.tagloy.taglock.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,11 +41,14 @@ public class GridAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        PackageManager manager = context.getPackageManager();
         ViewHolder viewHolder = null;
         if (itemList!=null){
             viewHolder = new ViewHolder();
             LayoutInflater layoutInflater = (LayoutInflater) this.context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-            convertView = layoutInflater.inflate(R.layout.item,null);
+            if (layoutInflater != null) {
+                convertView = layoutInflater.inflate(R.layout.item,null);
+            }
             viewHolder.appImage = convertView.findViewById(R.id.icon_view);
             viewHolder.appName = convertView.findViewById(R.id.name_view);
             convertView.setTag(viewHolder);
@@ -51,9 +57,14 @@ public class GridAdapter extends BaseAdapter {
         }
         viewHolder.appImage.setImageDrawable(itemList.get(position).icon);
         viewHolder.appName.setText(itemList.get(position).name);
+
+        viewHolder.appImage.setOnClickListener(v -> {
+            Intent intent = manager.getLaunchIntentForPackage(itemList.get(position).label.toString());
+            context.startActivity(intent);
+        });
         return convertView;
     }
-    class ViewHolder{
+    static class ViewHolder{
         ImageView appImage;
         TextView appName;
     }

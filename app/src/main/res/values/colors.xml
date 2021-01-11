@@ -6,5 +6,8 @@
     <color name="tagColor">#820405</color>
     <color name="colorSplash">#B90721</color>
     <color name="blackWall">#000000</color>
+    <color name="offline">#c21319</color>
+    <color name="online">#08d42e</color>
+    <color name="highlightMenu">#bdbdbd</color>
 
 </resources>

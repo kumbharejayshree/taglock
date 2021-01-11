@@ -5,8 +5,14 @@ import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
+import android.view.WindowManager;
+
+import androidx.annotation.RequiresApi;
 
 import com.tagloy.taglock.activity.MainActivity;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
@@ -15,6 +21,7 @@ import com.tagloy.taglock.realmmodels.DefaultProfile;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import io.realm.RealmResults;
 
@@ -326,6 +333,57 @@ public class SuperClass {
     public void switchDebugging(int set){
         try{
             Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "settings put global adb_enabled " + set});
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //Hide navbar
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void hideNav(){
+        try{
+            show();
+            Process root = null;
+            Display display =
+                    ((WindowManager) Objects.requireNonNull(context.getSystemService(Context.WINDOW_SERVICE)))
+                            .getDefaultDisplay();
+            int rot = display.getRotation();
+
+            switch (rot){
+                case Surface
+                        .ROTATION_0:
+                    Log.d("Rot", "0");
+                    root = Runtime.getRuntime().exec(new String[] {"su", "-c", "wm overscan 0,0,0,-48"});
+                    break;
+                case Surface
+                        .ROTATION_90:
+                    Log.d("Rot", "90");
+                    root = Runtime.getRuntime().exec(new String[] {"su", "-c", "wm overscan -48,0,0,0"});
+                    break;
+                case Surface
+                        .ROTATION_180:
+                    Log.d("Rot", "180");
+                    root = Runtime.getRuntime().exec(new String[] {"su", "-c", "wm overscan 0,-48,0,0"});
+                    break;
+                case Surface
+                        .ROTATION_270:
+                    Log.d("Rot", "270");
+                    root = Runtime.getRuntime().exec(new String[] {"su", "-c", "wm overscan 0,0,-48,0"});
+                    break;
+            }
+
+            assert root != null;
+            root.waitFor();
+        }catch (IOException | InterruptedException ie){
+            ie.printStackTrace();
+        }
+    }
+
+    //Show navbar
+    public void show(){
+        try{
+            Process root = Runtime.getRuntime().exec(new String[] {"su", "-c", "wm overscan 0,0,0,0"});
             root.waitFor();
         }catch (IOException | InterruptedException ie){
             ie.printStackTrace();

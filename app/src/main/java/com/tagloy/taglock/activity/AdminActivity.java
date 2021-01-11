@@ -1,6 +1,7 @@
 package com.tagloy.taglock.activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AppOpsManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -20,7 +21,11 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -76,7 +81,31 @@ public class AdminActivity extends AppCompatActivity {
         SuperClass.grantRoot();
         superClass.enableUnknownSource();
         superClass.enableWriteSettings(getPackageName());
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         permissionListView = findViewById(R.id.permissionsList);
+        permissionListView.setOnItemClickListener((parent, view, position, id) -> {
+            if (position == 0){
+                Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, devicePolicyAdmin);
+                intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, getString(R.string.admin_explanation));
+                startActivityForResult(intent, REQUEST_ENABLE);
+            }else if (position == 1){
+                if (Build.VERSION.SDK_INT >= 23) {
+                    permissionsClass.getPermission(this, this, Manifest.permission.PACKAGE_USAGE_STATS, REQUEST_USAGE_ACCESS);
+                }
+            }else if (position == 2){
+                if (Build.VERSION.SDK_INT >= 23) {
+                    permissionsClass.getPermission(this, this, Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE, REQUEST_APP_NOTIFICATION);
+                }
+            }else if (position == 4){
+                if (Build.VERSION.SDK_INT >= 23) {
+                    permissionsClass.getPermission(this, this, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
+                }
+            }
+        });
 //        View footerView = ((LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.footer_layout,null,false);
 //        grantButton = footerView.findViewById(R.id.grantButton);
         if (isMyPolicyActive()) {
@@ -99,6 +128,7 @@ public class AdminActivity extends AppCompatActivity {
                 superClass.enablePhoneCalls(getPackageName());
                 superClass.enablePhoneState(getPackageName());
                 superClass.enableStorage(getPackageName());
+                superClass.enableReadStorage(getPackageName());
                 superClass.enableReadContacts(getPackageName());
             }
         } else {

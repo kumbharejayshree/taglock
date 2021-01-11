@@ -381,8 +381,8 @@ public class TaglockDeviceInfo {
                     try {
                         Log.d("Cred API", "Success");
                         JSONObject name = new JSONObject(response);
-                        String username = name.getString("username");
-                        String password = name.getString("password");
+                        String username = name.getString("username").trim();
+                        String password = name.getString("password").trim();
                         String data = username + "\n" + password;
                         createFile(data);
                     } catch (JSONException je) {
@@ -452,7 +452,7 @@ public class TaglockDeviceInfo {
 
     //To get memory of the device
     public String checkMemory() {
-        StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getPath());
+        StatFs statFs = new StatFs(Environment.getExternalStorageDirectory().getAbsolutePath());
         float bytesAvailable, bytesTotal;
         bytesTotal = (statFs.getBlockSizeLong() * statFs.getBlockCountLong());
         bytesAvailable = statFs.getBlockSizeLong() * statFs.getAvailableBlocksLong();
@@ -686,8 +686,6 @@ public class TaglockDeviceInfo {
                     jsonObject.put("device_group", device_group);
                     url = AppConfig.UPDATE_DEVICENAME_URL;
                 }
-//                jsonObject.put("device_name", deviceInformation.getDevice_name());
-//                jsonObject.put("device_group", deviceInformation.getDevice_group());
                 jsonObject.put("latitude", deviceInformation.getLatitudes());
                 jsonObject.put("longitude", deviceInformation.getLongitudes());
                 jsonObject.put("device_locked", deviceInformation.getDevice_locked_status());
@@ -703,84 +701,153 @@ public class TaglockDeviceInfo {
                 jsonObject.put("updated_at", String.valueOf(System.currentTimeMillis() / 1000));
                 final String request = jsonObject.toString();
                 RequestQueue queue = Volley.newRequestQueue(context);
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(response);
-                            String res = jsonObject.getString("status");
-                            String message = jsonObject.getString("message");
-                            if (res.equals("200")) {
-                                Log.d("Success ", message);
-                                if (id != 0){
-                                    String result = jsonObject.getString("result");
-                                    JSONObject resultObject = new JSONObject(result);
-                                    int device_id = resultObject.getInt("id");
-                                    String device_name = resultObject.getString("device_name");
-                                    String device_group = resultObject.getString("device_group");
-                                    String group_image = resultObject.getString("group_image");
-                                    int exit_passcode = resultObject.getInt("passcode");
-                                    int clear_passcode = resultObject.getInt("clear_passcode");
-                                    int call_duration = resultObject.getInt("default_apk_call");
-                                    String package_name = resultObject.getString("apk_package");
-                                    String device_n = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
-                                    String device_g = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
-                                    String group_i = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
-                                    defaultProfile.setPasscode(exit_passcode);
-                                    defaultProfile.setClear_data_passcode(clear_passcode);
-                                    defaultProfile.setDefault_apk_call_duration(call_duration);
-                                    defaultProfileController.updatePasscodes(defaultProfile);
-                                    if (group_i!= null){
-                                        PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
-                                        File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
-                                        if(!imageFile.exists())
-                                            downloadWallpaper(group_image);
-                                    }else if(group_image.equals("")){
-                                        PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
-                                        downloadWallpaper(group_image);
-                                    }
-                                    if (!device_n.equals(device_name) || !device_g.equals(device_group)){
-                                        deviceInformation1.setDevice_name(device_name);
-                                        deviceInformation1.setDevice_group(device_group);
-                                        deviceInfoController.updateDevice(deviceInformation1);
-                                        PreferenceHelper.setValueString(context,AppConfig.DEVICE_NAME,device_name);
-                                        PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,device_group);
-                                        Log.d("Realm Device","Updated");
-                                    }
-                                    if (!device_g.equals(device_group)){
-                                        defaultProfile.setGroup_name(device_group);
-                                        defaultProfile.setPasscode(exit_passcode);
-                                        defaultProfile.setClear_data_passcode(clear_passcode);
-                                        defaultProfileController.updateProfile(defaultProfile);
-                                        defaultProfile.setDefault_apk_call_duration(call_duration);
-                                        defaultProfile.setApp_package_name(package_name);
-                                        defaultProfileController.updateProfileData(defaultProfile);
-                                        PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP,device_group);
-                                        Log.d("Realm Profile","Updated");
-                                    }
-                                    Log.d("Id", String.valueOf(device_id));
-                                    Log.d("Name", device_name);
-                                    Log.d("Group", device_group);
-                                }else{
-                                    String result = jsonObject.getString("id");
-                                    JSONObject resultObject = new JSONObject(result);
-                                    int id = resultObject.getInt("id");
-                                    PreferenceHelper.setValueInt(context,AppConfig.DEVICE_ID,id);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, url, response -> {
+                    try {
+                        JSONObject jsonObject1 = new JSONObject(response);
+                        String res = jsonObject1.getString("status");
+                        String message = jsonObject1.getString("message");
+                        if (res.equals("200")) {
+                            Log.d("Success ", message);
+                            if (id != 0){
+                                String result = jsonObject1.getString("result");
+                                JSONObject resultObject = new JSONObject(result);
+                                int device_id = resultObject.getInt("id");
+                                String device_name1 = resultObject.getString("device_name");
+                                String device_group1 = resultObject.getString("device_group");
+                                String group_image = resultObject.getString("group_image");
+                                int img_id = 0;
+                                try{
+                                    img_id = resultObject.getInt("img_id");
+                                }catch (NullPointerException ne){
+                                    ne.printStackTrace();
                                 }
 
-                            } else {
-                                Log.d("Failure ", message);
+                                int exit_passcode = resultObject.getInt("passcode");
+                                int clear_passcode = resultObject.getInt("clear_passcode");
+                                int call_duration = resultObject.getInt("default_apk_call");
+                                String package_name = resultObject.getString("apk_package");
+                                String device_n = PreferenceHelper.getValueString(context,AppConfig.DEVICE_NAME);
+                                String device_g = PreferenceHelper.getValueString(context,AppConfig.DEVICE_GROUP);
+                                String group_i = "";
+
+                                int image_id = PreferenceHelper.getInt(context, AppConfig.IMAGE_ID);
+
+                                try{
+                                    group_i = PreferenceHelper.getString(context,AppConfig.GROUP_WALLPAPER);
+                                }catch (NullPointerException ne){
+                                    ne.printStackTrace();
+                                }
+
+                                if (image_id != 0){
+                                    if (image_id != img_id){
+                                        if (!group_image.isEmpty()){
+                                            if (!group_i.isEmpty()){
+                                                File imageFile = new File("/storage/emulated/0/.taglock/" + group_i);
+                                                if (imageFile.exists()){
+                                                    if (imageFile.delete()) {
+                                                        Log.e("Image", "File deleted.");
+                                                    }else {
+                                                        Log.e("Image", "Failed to delete file!");
+                                                    }
+                                                    PreferenceHelper.setValueInt(context, AppConfig.IMAGE_ID, img_id);
+                                                }
+                                                PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+                                                File imgFile = new File("/storage/emulated/0/.taglock/" + group_image);
+                                                if(!imgFile.exists())
+                                                    downloadWallpaper(group_image);
+                                            }else {
+                                                PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+                                                File imgFile = new File("/storage/emulated/0/.taglock/" + group_image);
+                                                if(!imgFile.exists())
+                                                    downloadWallpaper(group_image);
+                                            }
+//                                            PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+//                                            File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
+//                                            if(!imageFile.exists())
+//                                                downloadWallpaper(group_image);
+                                        }
+                                    }
+                                } else {
+                                    PreferenceHelper.setValueInt(context, AppConfig.IMAGE_ID, img_id);
+                                    if (!group_image.isEmpty()){
+                                        PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+                                        File imgFile = new File("/storage/emulated/0/.taglock/" + group_image);
+                                        if(!imgFile.exists())
+                                            downloadWallpaper(group_image);
+                                    }
+                                }
+
+                                int cred;
+                                try{
+                                    cred = resultObject.getInt("cred");
+                                    if (cred == 1){
+                                        this.getCreds();
+                                    }else {
+                                        File file = new File("/storage/emulated/0/.taglock/appdata.txt");
+                                        if (file.exists()){
+                                            if (file.delete()) {
+                                                Log.e("App Creds", "File deleted.");
+                                            }else {
+                                                Log.e("App Creds", "Failed to delete file!");
+                                            }
+                                        }
+                                    }
+                                }catch (JSONException ne){
+                                    ne.printStackTrace();
+                                }
+
+                                defaultProfile.setPasscode(exit_passcode);
+                                defaultProfile.setClear_data_passcode(clear_passcode);
+                                defaultProfile.setDefault_apk_call_duration(call_duration);
+                                defaultProfileController.updatePasscodes(defaultProfile);
+//                                if (!group_i.isEmpty()) {
+//                                    PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+//                                    File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
+//                                    if(!imageFile.exists())
+//                                        downloadWallpaper(group_image);
+//                                }else
+//                                if (!group_image.isEmpty()){
+//                                    PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+//                                    File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
+//                                    if(!imageFile.exists())
+//                                        downloadWallpaper(group_image);
+//                                }
+                                if (!device_n.equals(device_name1) || !device_g.equals(device_group1)){
+                                    deviceInformation1.setDevice_name(device_name1);
+                                    deviceInformation1.setDevice_group(device_group1);
+                                    deviceInfoController.updateDevice(deviceInformation1);
+                                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_NAME, device_name1);
+                                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP, device_group1);
+                                    Log.d("Realm Device","Updated");
+                                }
+                                if (!device_g.equals(device_group1)){
+                                    defaultProfile.setGroup_name(device_group1);
+                                    defaultProfile.setPasscode(exit_passcode);
+                                    defaultProfile.setClear_data_passcode(clear_passcode);
+                                    defaultProfileController.updateProfile(defaultProfile);
+                                    defaultProfile.setDefault_apk_call_duration(call_duration);
+                                    defaultProfile.setApp_package_name(package_name);
+                                    defaultProfileController.updateProfileData(defaultProfile);
+                                    PreferenceHelper.setValueString(context,AppConfig.DEVICE_GROUP, device_group1);
+                                    Log.d("Realm Profile","Updated");
+                                }
+                                Log.d("Id", String.valueOf(device_id));
+                                Log.d("Name", device_name1);
+                                Log.d("Group", device_group1);
+                            }else{
+                                String result = jsonObject1.getString("id");
+                                JSONObject resultObject = new JSONObject(result);
+                                int id1 = resultObject.getInt("id");
+                                PreferenceHelper.setValueInt(context,AppConfig.DEVICE_ID, id1);
                             }
-                        } catch (JSONException je) {
-                            je.printStackTrace();
+
+                        } else {
+                            Log.d("Failure ", message);
                         }
+                    } catch (JSONException je) {
+                        je.printStackTrace();
                     }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("onErrorResponse: ", error.toString());
-                    }
-                }) {
+                }, error -> Log.d("onErrorResponse: ", error.toString())) {
                     @Override
                     public Map<String, String> getHeaders() throws AuthFailureError {
                         Map<String, String> parameter = new HashMap<>();
@@ -831,16 +898,14 @@ public class TaglockDeviceInfo {
         PreferenceHelper.setValueString(context,AppConfig.WALLPAPER_DOWN_ID,String.valueOf(wallId));
         DownloadManager.Query query = null;
         query = new DownloadManager.Query();
-        Cursor cursor = null;
-        if (query != null) {
-            query.setFilterByStatus(DownloadManager.STATUS_FAILED | DownloadManager.STATUS_SUCCESSFUL | DownloadManager.STATUS_PAUSED |
-                    DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING);
-        }
+        Cursor cursor;
+        query.setFilterByStatus(DownloadManager.STATUS_FAILED | DownloadManager.STATUS_SUCCESSFUL | DownloadManager.STATUS_PAUSED |
+                DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING);
         cursor = downloadManager.query(query);
         if (cursor.moveToFirst()) {
             int status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));
             if (status == DownloadManager.STATUS_FAILED) {
-                PreferenceHelper.setValueBoolean(context, AppConfig.TAGLOCK_DOWN_STATUS, false);
+                PreferenceHelper.setValueBoolean(context, AppConfig.WALLPAPER_DOWN_STATUS, false);
                 if (isNetworkConnected()) {
                     Log.d("Network Status", "Connected");
                 } else {
@@ -1028,6 +1093,33 @@ public class TaglockDeviceInfo {
         }
     }
 
+    public void hideSystemUI() {
+        try{
+            // Set the IMMERSIVE flag.
+            // Set the content to appear under the system bars so that the content
+            // doesn't resize when the system bars hide and show.
+            View mDecorView = ((Activity) context).getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    // Set the content to appear under the system bars so that the
+                    // content doesn't resize when the system bars hide and show.
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    // Hide the nav bar and status bar
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN;
+            mDecorView.setSystemUiVisibility(uiOptions);
+
+        }catch(Exception e){
+            ((Activity)context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
+
+    public void showSystemUI() {
+        View decorView = ((Activity)context).getWindow().getDecorView();
+        decorView.setSystemUiVisibility(0);
+    }
+
     //Hide the status and navigation bar
     public void hideStatusBar() {
         WindowManager.LayoutParams localLayoutParams = new WindowManager.LayoutParams();
@@ -1097,8 +1189,8 @@ public class TaglockDeviceInfo {
         View view = ((Activity) context).getLayoutInflater().inflate(R.layout.alert_dialog, null);
         final EditText alertEdit = view.findViewById(R.id.alertEdit);
         final AlertDialog.Builder alert = new AlertDialog.Builder(context)
-                .setTitle("Enter Passcode")
-                .setMessage("Are you sure you want to clear data?")
+                .setTitle("Clear Data")
+                .setMessage("Enter passcode to clear data")
                 .setView(view)
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override

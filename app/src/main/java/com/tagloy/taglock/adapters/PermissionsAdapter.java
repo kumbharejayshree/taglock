@@ -12,6 +12,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,14 +95,11 @@ public class PermissionsAdapter extends BaseAdapter {
                 finalMyViewHolder.permissionCheck.setChecked(true);
                 finalMyViewHolder.permissionCheck.setClickable(false);
             } else {
-                finalMyViewHolder.permissionGrant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-                        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, devicePolicyAdmin);
-                        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, context.getString(R.string.admin_explanation));
-                        ((Activity) context).startActivityForResult(intent, REQUEST_ENABLE);
-                    }
+                finalMyViewHolder.permissionGrant.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                    intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, devicePolicyAdmin);
+                    intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, context.getString(R.string.admin_explanation));
+                    ((Activity) context).startActivityForResult(intent, REQUEST_ENABLE);
                 });
             }
         }else if (position == 1) {
@@ -111,12 +109,9 @@ public class PermissionsAdapter extends BaseAdapter {
                 finalMyViewHolder.permissionCheck.setChecked(true);
                 finalMyViewHolder.permissionCheck.setClickable(false);
             } else {
-                finalMyViewHolder.permissionGrant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (Build.VERSION.SDK_INT >= 23)
-                            permissionsClass.getPermission(context, (Activity) context, Manifest.permission.PACKAGE_USAGE_STATS, REQUEST_USAGE_ACCESS);
-                    }
+                finalMyViewHolder.permissionGrant.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (Build.VERSION.SDK_INT >= 23)
+                        permissionsClass.getPermission(context, (Activity) context, Manifest.permission.PACKAGE_USAGE_STATS, REQUEST_USAGE_ACCESS);
                 });
             }
         }else if (position == 2) {
@@ -188,6 +183,27 @@ public class PermissionsAdapter extends BaseAdapter {
             finalMyViewHolder.permissionCheck.setChecked(true);
             finalMyViewHolder.permissionCheck.setClickable(false);
         }
+        myViewHolder.permissionName.setOnClickListener(v-> {
+            Log.d("Pos", String.valueOf(position));
+            if (position == 0){
+                Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, devicePolicyAdmin);
+                intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, context.getString(R.string.admin_explanation));
+                ((Activity) context).startActivityForResult(intent, REQUEST_ENABLE);
+            }else if (position == 1){
+                if (Build.VERSION.SDK_INT >= 23) {
+                    permissionsClass.getPermission(context, (Activity) context, Manifest.permission.PACKAGE_USAGE_STATS, REQUEST_USAGE_ACCESS);
+                }
+            }else if (position == 2){
+                if (Build.VERSION.SDK_INT >= 23) {
+                    permissionsClass.getPermission(context, (Activity) context, Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE, REQUEST_APP_NOTIFICATION);
+                }
+            }else if (position == 4){
+                if (Build.VERSION.SDK_INT >= 23) {
+                    permissionsClass.getPermission(context, (Activity) context, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
+                }
+            }
+        });
         myViewHolder.permissionGrant.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

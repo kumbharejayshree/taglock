@@ -148,7 +148,7 @@ public class ApkManagement {
                             String apk_name = apk.getString("apk_name");
                             String version = apk.getString("apk_version");
                             String versionName = version.replace(".", "");
-                            String installedVersion = (taglockDeviceInfo.getVersion(context,context.getPackageName())).replace(".", "");
+                            String installedVersion = (TaglockDeviceInfo.getVersion(context,context.getPackageName())).replace(".", "");
                             long ver = Long.parseLong(versionName);
                             long ins = Long.parseLong(installedVersion);
                             if (ver > ins) {
@@ -245,10 +245,8 @@ public class ApkManagement {
         DownloadManager.Query query = null;
         query = new DownloadManager.Query();
         Cursor cursor = null;
-        if (query != null) {
-            query.setFilterByStatus(DownloadManager.STATUS_FAILED | DownloadManager.STATUS_SUCCESSFUL | DownloadManager.STATUS_PAUSED |
-                    DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING);
-        }
+        query.setFilterByStatus(DownloadManager.STATUS_FAILED | DownloadManager.STATUS_SUCCESSFUL | DownloadManager.STATUS_PAUSED |
+                DownloadManager.STATUS_PENDING | DownloadManager.STATUS_RUNNING);
         cursor = downloadManager.query(query);
         if (cursor.moveToFirst()) {
             int status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS));

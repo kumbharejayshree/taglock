@@ -5,6 +5,9 @@ public class AppConfig {
 
     //Preprod base URL for Taglock
 //    public static final String BASE_URL = "http://13.232.206.57";
+//
+    // Preprod base URL for Taglock
+//    public static final String BASE_URL = "https://prelockapi.tagloy.com";
 
     //Prod base URL for Taglock
     public static final String BASE_URL = "https://taglockapi.tagloy.com";
@@ -13,7 +16,7 @@ public class AppConfig {
 //    public static final String BASE_URL = "https://telelockapi.tagcx.com";
 
     //Localhost base URL
-//    public static final String BASE_URL = "http://192.168.1.102/taglock_data";
+//    public static final String BASE_URL = "http://10.10.11.122/taglock_data";
 
     public static final String NAME_VALIDITY_URL = BASE_URL + "/device/validname";
     public static final String FCM_URL = BASE_URL + "/device/token";
@@ -50,6 +53,7 @@ public class AppConfig {
     public static final String UPDATE_STATUS = "update_status";
     public static final String HDMI_STATUS = "hdmi_status";
     public static final String GROUP_WALLPAPER = "group_wallpaper";
+    public static final String IMAGE_ID = "img_id";
     public static final String TAGLOCK_DOWN_STATUS = "taglock_down_status";
     public static final String TAGLOCK_INSTALL_STATUS = "taglock_install_status";
     public static final String WALLPAPER_DOWN_STATUS = "wallpaper_down_status";

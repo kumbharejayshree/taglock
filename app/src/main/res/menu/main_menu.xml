@@ -6,7 +6,8 @@
 
     <item
         android:id="@+id/infoMenu"
-        android:title="@string/info"/>
+        android:title="@string/info"
+        android:enabled="true"/>
 
 <!--    <item-->
 <!--        android:id="@+id/wifiMenu"-->
@@ -18,12 +19,20 @@
 
     <item
         android:id="@+id/settingsMenu"
-        android:title="@string/network_settings"/>
+        android:title="@string/network_settings"
+        android:enabled="true"/>
+
+    <item
+        android:id="@+id/rotationMenu"
+        android:title="@string/rotation"
+        android:enabled="true"/>
 
     <item
         android:id="@+id/clearMenu"
-        android:title="@string/clear"/>
+        android:title="@string/clear"
+        android:enabled="true"/>
     <item
         android:id="@+id/exitMenu"
-        android:title="@string/exit"/>
+        android:title="@string/exit"
+        android:enabled="true"/>
 </menu>

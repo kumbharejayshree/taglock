@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -33,14 +34,16 @@ import io.realm.RealmResults;
 
 public class InfoActivity extends AppCompatActivity {
 
-    TextView deviceNameText,deviceGroupText,taglockText,appNameText,ipText,wifiMacText,lanMacText,storageText,connectionText,
-    connectivityText, orientationText ,changeOrientationText, orientationTextView; //timeZoneText, changeTimeZoneText;
+    TextView deviceNameText,deviceGroupText,taglockText,appNameText,ipText,wifiMacText,lanMacText,
+            storageText,connectionText, connectivityText, orientationText,
+            orientationTextView; //timeZoneText, changeTimeZoneText;
     TaglockDeviceInfo taglockDeviceInfo;
     SuperClass superClass;
     ApplicationInfo app;
     PackageManager manager;
     CharSequence appName = "";
     String ip,versionName;
+    Button netTestSpeed;
     Context context = InfoActivity.this;
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
@@ -56,12 +59,13 @@ public class InfoActivity extends AppCompatActivity {
         appNameText = findViewById(R.id.appname_text);
         connectionText = findViewById(R.id.connection_text);
         connectivityText = findViewById(R.id.connectivity_text);
+        netTestSpeed = findViewById(R.id.networkTestBtn);
         ipText = findViewById(R.id.ip_text);
         wifiMacText = findViewById(R.id.wifiMac_text);
         lanMacText = findViewById(R.id.lanMac_text);
         storageText = findViewById(R.id.storage_text);
         orientationText = findViewById(R.id.orientation_text);
-        changeOrientationText = findViewById(R.id.change_text);
+//        changePositionText = findViewById(R.id.change_position);
         orientationTextView = findViewById(R.id.orientationTextView);
 //        timeZoneText = findViewById(R.id.timeZoneText);
 //        changeTimeZoneText = findViewById(R.id.changeTimeZoneText);
@@ -134,12 +138,9 @@ public class InfoActivity extends AppCompatActivity {
 
         storageText.setText("Internal: " + memory);
 
-        connectivityText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(InfoActivity.this, WebActivity.class);
-                startActivity(intent);
-            }
+        netTestSpeed.setOnClickListener(v -> {
+            Intent intent = new Intent(InfoActivity.this, WebActivity.class);
+            startActivity(intent);
         });
 
         int orientation = getResources().getConfiguration().orientation;
@@ -160,60 +161,11 @@ public class InfoActivity extends AppCompatActivity {
 //            }
 //        });
 
-        final int passcode = getProfile.get(0).getClear_data_passcode();
-        changeOrientationText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                View view = getLayoutInflater().inflate(R.layout.alert_dialog, null);
-                final EditText alertEdit = view.findViewById(R.id.alertEdit);
-                final AlertDialog.Builder alert = new AlertDialog.Builder(context);
-                alert.setTitle("Enter Passcode")
-                        .setMessage("Are you sure you want to change rotation?")
-                        .setView(view)
-                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                if (TextUtils.isEmpty(alertEdit.getText())) {
-                                    taglockDeviceInfo.showMessage("Please enter passcode");
-                                } else if (Integer.parseInt(alertEdit.getText().toString()) == passcode) {
-                                    Intent rotationIntent = new Intent();
-                                    rotationIntent.setClassName("com.android.tv.settings", "com.android.tv.settings.device.display.rotation.ScreenRotationActivity");
-                                    startActivity(rotationIntent);
-                                } else {
-                                    taglockDeviceInfo.showMessage("Incorrect passcode!");
-                                }
-                            }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        });
-                final AlertDialog dialog = alert.create();
-                dialog.setCanceledOnTouchOutside(false);
-                dialog.show();
-
-                final Handler handler = new Handler();
-                final Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        if (dialog.isShowing()) {
-                            dialog.dismiss();
-                        }
-                    }
-                };
-
-                alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        handler.removeCallbacks(runnable);
-                    }
-                });
-
-                handler.postDelayed(runnable, 30000);
-            }
-        });
+//        changePositionText.setOnClickListener(v -> {
+//            Intent positionIntent = new Intent();
+//            positionIntent.setClassName("com.android.tv.settings", "com.android.tv.settings.device.display.position.ScreenPositionActivity");
+//            startActivity(positionIntent);
+//        });
 
         registerReceiver(connectionReceiver,new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }

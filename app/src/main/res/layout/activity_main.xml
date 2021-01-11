@@ -2,58 +2,93 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000"
-    android:id="@+id/mainLayout"
     tools:context=".activity.MainActivity">
 
     <ImageView
         android:id="@+id/wallpaperImageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:contentDescription="@string/wall_text" />
 
     <pl.droidsonroids.gif.GifImageView
         android:id="@+id/downloadProgress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/download72"
         android:layout_centerHorizontal="true"
-        android:visibility="gone"/>
+        android:src="@drawable/download72"
+        android:visibility="gone" />
+
     <GridView
         android:id="@+id/appsGrid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         android:layout_marginTop="10dp"
-        android:numColumns="3"/>
+        android:numColumns="3" />
+
+    <TextView
+        android:id="@+id/conText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/ipText"
+        android:textColor="@color/offline"
+        android:text="@string/offline"
+        android:textSize="35sp"/>
+
     <TextView
         android:id="@+id/ipText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#777"
-        android:layout_marginBottom="10dp"
-        android:textSize="16sp"
         android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:textColor="#777"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/appTimerText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/versionText"
+        android:textAlignment="center"
+        android:textColor="#777"
+        android:textSize="20sp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/credImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_baseline_key_24"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/textClock"
+        android:visibility="gone"/>
 
     <TextClock
         android:id="@+id/textClock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:textColor="#777"
+        android:layout_centerHorizontal="true"
         android:layout_marginBottom="10dp"
-        android:textSize="18sp"
-        android:layout_centerHorizontal="true"/>
+        android:textColor="#777"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/versionText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#777"
-        android:layout_marginBottom="10dp"
-        android:textSize="16sp"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:textColor="#777"
+        android:textSize="16sp" />
 
 </RelativeLayout>

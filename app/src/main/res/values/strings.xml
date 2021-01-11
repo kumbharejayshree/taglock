@@ -15,6 +15,7 @@
     <string name="current_orientation">Current Orientation: </string>
     <string name="current_timezone">Current Timezone: </string>
     <string name="change_orientation"><u>Change Orientation</u></string>
+    <string name="change_position"><u>Change Position</u></string>
     <string name="memory">(Used/Free/Total)</string>
     <string name="device_admin">Taglock Device Admin</string>
     <string name="device_admin_description">Allows Tagtalk Admins to control, manage and monitor the device</string>
@@ -31,6 +32,7 @@
     <string name="permission">These permissions are necessary for Taglock to work properly.</string>
     <string name="username">Enter username*</string>
     <string name="password">Enter password*</string>
+    <string name="wall_text">Wallpaper for Launcher</string>
 
     <!--Menu strings-->
     <string name="info">Device Info</string>
@@ -40,6 +42,12 @@
     <string name="exit">Exit Taglock</string>
     <string name="network_settings">Network Settings</string>
     <string name="rotation">Rotation Settings</string>
+
+    <!--    Random Strings-->
+    <string name="offline">Offline</string>
+    <string name="online">Online</string>
+    <string name="ip">IPAddress: </string>
+    <string name="speed_test">Test Network Speed</string>
 
     <!--Permission strings-->
     <string name="admin_permission">Activate TagLock Device Admin to provide better kiosk environment.</string>

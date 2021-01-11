@@ -4,6 +4,7 @@ import android.content.Context;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.webkit.HttpAuthHandler;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -20,6 +21,8 @@ public class WebActivity extends AppCompatActivity {
     WebView webView;
     Context mContext;
     TaglockDeviceInfo taglockDeviceInfo;
+    CountDownTimer backCountDownTimer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +48,30 @@ public class WebActivity extends AppCompatActivity {
                 taglockDeviceInfo.showMessage("Your Internet Connection May not be active Or " + error);
             }
         });
-        webView.loadUrl("http://fast.com");
+        webView.loadUrl("https://fast.com");
+
+        backCountDownTimer = new CountDownTimer(15*1000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                onBackPressed();
+            }
+        };
+        backCountDownTimer.start();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        backCountDownTimer.cancel();
     }
 }
