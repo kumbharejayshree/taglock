@@ -44,12 +44,12 @@ public class SplashActivity extends AppCompatActivity {
                 boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
                 boolean coarseLocation = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
                 boolean location = superClass.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-                boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
-                boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
+//                boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
+//                boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
                 boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-                boolean wContacts = superClass.checkPermission(Manifest.permission.WRITE_CONTACTS);
+//                boolean wContacts = superClass.checkPermission(Manifest.permission.WRITE_CONTACTS);
                 boolean wStorage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                if (phone && location && contacts && camera && wStorage && coarseLocation){
+                if (phone && location && wStorage && coarseLocation){
                     String device_name = PreferenceHelper.getValueString(mContext,AppConfig.DEVICE_NAME);
                     if (device_name != null){
                         PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_ACTIVE,true);
@@ -73,13 +73,13 @@ public class SplashActivity extends AppCompatActivity {
                         superClass.enableLocation(getPackageName());
                         superClass.enableCoarseLocation(getPackageName());
                     }
-                    if (!contacts || !wContacts){
-                        superClass.enableReadContacts(getPackageName());
-                        superClass.enableContacts(getPackageName());
-                    }
-                    if (!camera){
-                        superClass.enableCamera(getPackageName());
-                    }
+//                    if (!contacts || !wContacts){
+//                        superClass.enableReadContacts(getPackageName());
+//                        superClass.enableContacts(getPackageName());
+//                    }
+//                    if (!camera){
+//                        superClass.enableCamera(getPackageName());
+//                    }
                     if (!storage || !wStorage){
                         superClass.enableStorage(getPackageName());
                         superClass.enableReadStorage(getPackageName());

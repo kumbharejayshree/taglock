@@ -51,22 +51,21 @@ public class DeviceDetailActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.submitGroupBtn:
-                if (TextUtils.isEmpty(groupKeyEdit.getText())) {
-                    groupKeyEdit.setError("Please enter group key");
-                }else if (TextUtils.isEmpty(deviceNameEdit.getText())){
-                    deviceNameEdit.setError("Please enter device name");
-                }else if (TextUtils.isEmpty(groupIdEdit.getText())){
-                    groupIdEdit.setError("Please enter group id");
-                }else {
-                    PreferenceHelper.setValueBoolean(this, AppConfig.IS_ACTIVE, true);
-                    String groupKey = groupKeyEdit.getText().toString();
-                    String deviceName = deviceNameEdit.getText().toString();
-                    String groupId = groupIdEdit.getText().toString();
-                    taglockDeviceInfo.getGroup(groupId);
-                    taglockDeviceInfo.checkGroupKey(deviceName,groupId, groupKey);
-                }
+        if (v.getId() == R.id.submitGroupBtn) {
+            if (TextUtils.isEmpty(groupKeyEdit.getText())) {
+                groupKeyEdit.setError("Please enter group key");
+            } else if (TextUtils.isEmpty(deviceNameEdit.getText())) {
+                deviceNameEdit.setError("Please enter device name");
+            } else if (TextUtils.isEmpty(groupIdEdit.getText())) {
+                groupIdEdit.setError("Please enter group id");
+            } else {
+                PreferenceHelper.setValueBoolean(this, AppConfig.IS_ACTIVE, true);
+                String groupKey = groupKeyEdit.getText().toString();
+                String deviceName = deviceNameEdit.getText().toString();
+                String groupId = groupIdEdit.getText().toString();
+                taglockDeviceInfo.getGroup(groupId);
+                taglockDeviceInfo.checkGroupKey(deviceName, groupId, groupKey);
+            }
         }
     }
 }

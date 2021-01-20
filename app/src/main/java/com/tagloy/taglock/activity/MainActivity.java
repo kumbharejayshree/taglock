@@ -215,7 +215,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         //Hide navigation bar
-        superClass.hideNavToggle();
+//        superClass.hideNavToggle();
 
         //Hide status and nav bar
         if (Build.VERSION.SDK_INT>=23){

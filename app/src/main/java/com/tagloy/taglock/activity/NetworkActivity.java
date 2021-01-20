@@ -57,15 +57,12 @@ public class NetworkActivity extends AppCompatActivity {
         wifiListView = findViewById(R.id.wifiListView);
         wifiScanReceiver = new WifiScanReceiver();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        wifiListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String ssid = getItem(position).SSID;
-                String frequency = String.valueOf(getItem(position).frequency);
-                String level = String.valueOf(getItem(position).level);
-                Log.d( "Frequency: ", frequency + " Level: " + level);
-                connectToWifi(ssid);
-            }
+        wifiListView.setOnItemClickListener((parent, view, position, id) -> {
+            String ssid = getItem(position).SSID;
+            String frequency = String.valueOf(getItem(position).frequency);
+            String level = String.valueOf(getItem(position).level);
+            Log.d( "Frequency: ", frequency + " Level: " + level);
+            connectToWifi(ssid);
         });
         String device_name = PreferenceHelper.getValueString(this,AppConfig.DEVICE_NAME);
         if (device_name != null){
@@ -84,15 +81,12 @@ public class NetworkActivity extends AppCompatActivity {
                 wifiManager.startScan();
             }
         }
-        submitNetwork.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (taglockDeviceInfo.isNetworkConnected()){
-                    Intent intent = new Intent(NetworkActivity.this,DeviceDetailActivity.class);
-                    startActivity(intent);
-                }else {
-                    taglockDeviceInfo.showMessage("Please connect to the network");
-                }
+        submitNetwork.setOnClickListener(v -> {
+            if (taglockDeviceInfo.isNetworkConnected()){
+                Intent intent = new Intent(NetworkActivity.this,DeviceDetailActivity.class);
+                startActivity(intent);
+            }else {
+                taglockDeviceInfo.showMessage("Please connect to the network");
             }
         });
         registerReceiver(wifiScanReceiver,new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));

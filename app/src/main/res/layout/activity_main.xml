@@ -27,9 +27,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:layout_marginTop="10dp"
         android:numColumns="3" />
 
     <TextView
@@ -37,9 +37,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/ipText"
-        android:textColor="@color/offline"
         android:text="@string/offline"
-        android:textSize="35sp"/>
+        android:textColor="@color/offline"
+        android:textSize="35sp" />
 
     <TextView
         android:id="@+id/ipText"
@@ -55,8 +55,8 @@
         android:id="@+id/appTimerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
         android:layout_above="@+id/versionText"
+        android:layout_alignParentEnd="true"
         android:textAlignment="center"
         android:textColor="#777"
         android:textSize="20sp"
@@ -66,10 +66,11 @@
         android:id="@+id/credImageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_baseline_key_24"
-        android:layout_centerHorizontal="true"
         android:layout_above="@+id/textClock"
-        android:visibility="gone"/>
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/key_text"
+        android:src="@drawable/ic_baseline_key_24"
+        android:visibility="gone" />
 
     <TextClock
         android:id="@+id/textClock"

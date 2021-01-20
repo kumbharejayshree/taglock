@@ -33,6 +33,7 @@
     <string name="username">Enter username*</string>
     <string name="password">Enter password*</string>
     <string name="wall_text">Wallpaper for Launcher</string>
+    <string name="key_text">Key icon for credentials</string>
 
     <!--Menu strings-->
     <string name="info">Device Info</string>

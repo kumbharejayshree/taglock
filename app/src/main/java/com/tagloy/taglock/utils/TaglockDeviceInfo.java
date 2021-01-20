@@ -531,37 +531,31 @@ public class TaglockDeviceInfo {
                 jsonObject.put("group_name", group_name);
                 final String request = jsonObject.toString();
                 RequestQueue queue = Volley.newRequestQueue(context);
-                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.PROFILE_URL, new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONArray jsonArray = new JSONArray(response);
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject profile = jsonArray.getJSONObject(i);
-                                defaultProfile.setApp_package_name(profile.getString("apk_package"));
-                                defaultProfile.setTaglock_exited_status("1".equals(profile.getString("taglock_status")));
-                                defaultProfile.setNavigationbar_status("1".equals(profile.getString("nav_status")));
-                                defaultProfile.setPasscode(profile.getInt("passcode"));
-                                defaultProfile.setClear_data_passcode(profile.getInt("clear_passcode"));
-                                defaultProfile.setDefault_apk_call_duration(profile.getInt("default_apk_call"));
-                                defaultProfile.setGroup_name(profile.getString("group_name"));
-                                defaultProfile.setDefault_apk_version(profile.getString("apk_version"));
-                                boolean profileRealm = defaultProfileController.isAvailablProfileData();
-                                if (profileRealm) {
-                                    defaultProfileController.updateProfileDataContent(defaultProfile);
-                                } else {
-                                    defaultProfileController.addDefaultProfileData(defaultProfile);
-                                }
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.PROFILE_URL, response -> {
+                    try {
+                        JSONArray jsonArray = new JSONArray(response);
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject profile = jsonArray.getJSONObject(i);
+                            defaultProfile.setApp_package_name(profile.getString("apk_package"));
+                            defaultProfile.setTaglock_exited_status("1".equals(profile.getString("taglock_status")));
+                            defaultProfile.setNavigationbar_status("1".equals(profile.getString("nav_status")));
+                            defaultProfile.setPasscode(profile.getInt("passcode"));
+                            defaultProfile.setClear_data_passcode(profile.getInt("clear_passcode"));
+                            defaultProfile.setDefault_apk_call_duration(profile.getInt("default_apk_call"));
+                            defaultProfile.setGroup_name(profile.getString("group_name"));
+                            defaultProfile.setDefault_apk_version(profile.getString("apk_version"));
+                            boolean profileRealm = defaultProfileController.isAvailablProfileData();
+                            if (profileRealm) {
+                                defaultProfileController.updateProfileDataContent(defaultProfile);
+                            } else {
+                                defaultProfileController.addDefaultProfileData(defaultProfile);
                             }
-                        } catch (JSONException je) {
-                            je.printStackTrace();
                         }
+                    } catch (JSONException je) {
+                        je.printStackTrace();
                     }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
+                }, error -> {
 
-                    }
                 }){
                     @Override
                     public Map<String, String> getHeaders() throws AuthFailureError {
@@ -718,7 +712,7 @@ public class TaglockDeviceInfo {
                                 int img_id = 0;
                                 try{
                                     img_id = resultObject.getInt("img_id");
-                                }catch (NullPointerException ne){
+                                }catch (JSONException ne){
                                     ne.printStackTrace();
                                 }
 
@@ -739,8 +733,8 @@ public class TaglockDeviceInfo {
                                 }
 
                                 if (image_id != 0){
-                                    if (image_id != img_id){
-                                        if (!group_image.isEmpty()){
+                                    if (!group_image.isEmpty()){
+                                        if (image_id != img_id) {
                                             if (!group_i.isEmpty()){
                                                 File imageFile = new File("/storage/emulated/0/.taglock/" + group_i);
                                                 if (imageFile.exists()){
@@ -761,10 +755,16 @@ public class TaglockDeviceInfo {
                                                 if(!imgFile.exists())
                                                     downloadWallpaper(group_image);
                                             }
-//                                            PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
-//                                            File imageFile = new File("/storage/emulated/0/.taglock/" + group_image);
-//                                            if(!imageFile.exists())
-//                                                downloadWallpaper(group_image);
+                                        }else{
+                                            File imageFile = new File("/storage/emulated/0/.taglock/" + group_i);
+                                            if (imageFile.exists()){
+                                                Log.d("Wallpaper", "Exists");
+                                            }else {
+                                                PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);
+                                                File imgFile = new File("/storage/emulated/0/.taglock/" + group_image);
+                                                if(!imgFile.exists())
+                                                    downloadWallpaper(group_image);
+                                            }
                                         }
                                     }
                                 } else {
@@ -921,6 +921,7 @@ public class TaglockDeviceInfo {
         public void onReceive(Context context, Intent intent) {
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             if (id == wallId) {
+                Log.d("Wallpaper", "Downloaded");
                 PreferenceHelper.setValueBoolean(context, AppConfig.WALLPAPER_DOWN_STATUS, true);
             }
         }
@@ -1170,8 +1171,8 @@ public class TaglockDeviceInfo {
         final DeviceInformation deviceInformation = new DeviceInformation();
         superClass = new SuperClass(context);
         final String packageName = PreferenceHelper.getValueString(context, AppConfig.DEVICE_LAUNCHER);
-        final String deviceName = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
-        superClass.showNavToggle();
+//        final String deviceName = PreferenceHelper.getValueString(context, AppConfig.DEVICE_NAME);
+//        superClass.showNavToggle();
         PreferenceHelper.setValueBoolean(context, AppConfig.IS_ACTIVE, false);
         deviceInformation.setDevice_locked_status(false);
         deviceInfoController.updateTaglockStatus(deviceInformation);

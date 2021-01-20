@@ -112,24 +112,26 @@ public class AdminActivity extends AppCompatActivity {
             boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
             boolean location = superClass.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
             boolean coarseLocation = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-            boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
-            boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
             boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-            if (phone && location && contacts && camera && storage && coarseLocation) {
+            boolean wStorage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            if (phone && location && storage && coarseLocation) {
                 PreferenceHelper.setValueBoolean(this, AppConfig.IS_ACTIVE, true);
                 SuperClass.enableActivity(AdminActivity.this);
                 Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
                 startActivity(intent);
             } else {
-                superClass.enableCamera(getPackageName());
-                superClass.enableContacts(getPackageName());
-                superClass.enableLocation(getPackageName());
-                superClass.enableCoarseLocation(getPackageName());
-                superClass.enablePhoneCalls(getPackageName());
-                superClass.enablePhoneState(getPackageName());
-                superClass.enableStorage(getPackageName());
-                superClass.enableReadStorage(getPackageName());
-                superClass.enableReadContacts(getPackageName());
+                if (!phone){
+                    superClass.enablePhoneCalls(getPackageName());
+                    superClass.enablePhoneState(getPackageName());
+                }
+                if (!location || !coarseLocation){
+                    superClass.enableLocation(getPackageName());
+                    superClass.enableCoarseLocation(getPackageName());
+                }
+                if (!storage || !wStorage){
+                    superClass.enableStorage(getPackageName());
+                    superClass.enableReadStorage(getPackageName());
+                }
             }
         } else {
             taglockDeviceInfo.showMessage("Please grant admin permission");
@@ -183,30 +185,26 @@ public class AdminActivity extends AppCompatActivity {
     public void enableSubmit(){
         submitPermission.setClickable(true);
         submitPermission.setTextColor(getResources().getColor(R.color.tagColor));
-        submitPermission.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isMyPolicyActive()){
-                    boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
-                    boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-                    boolean contacts = superClass.checkPermission(Manifest.permission.READ_CONTACTS);
-                    boolean camera = superClass.checkPermission(Manifest.permission.CAMERA);
-                    boolean storage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                    if (phone && location && contacts && camera && storage){
-                        SuperClass.enableActivity(AdminActivity.this);
-                        Intent intent = new Intent(AdminActivity.this,NetworkActivity.class);
-                        startActivity(intent);
-                    }else {
-                        taglockDeviceInfo.showMessage("Please Grant root permission and restart the application!");
-                    }
+        submitPermission.setOnClickListener(v -> {
+            if (isMyPolicyActive()){
+                boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
+                boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+                boolean storage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                if (phone && location && storage){
+                    SuperClass.enableActivity(AdminActivity.this);
+                    Intent intent = new Intent(AdminActivity.this,NetworkActivity.class);
+                    startActivity(intent);
                 }else {
-                    taglockDeviceInfo.showMessage("Please grant admin permission");
+                    taglockDeviceInfo.showMessage("Please Grant root permission and restart the application!");
                 }
+            }else {
+                taglockDeviceInfo.showMessage("Please grant admin permission");
             }
         });
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case REQUEST_USAGE_ACCESS:
                 if (!isAccessGranted()) {
@@ -225,7 +223,7 @@ public class AdminActivity extends AppCompatActivity {
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                         intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-                        startActivityForResult(intent,REQUEST_NOTIFICATION);
+                        startActivityForResult(intent, REQUEST_NOTIFICATION);
                     }
                 } else {
                     if (!isNotificationServiceRunning) {
@@ -317,14 +315,14 @@ public class AdminActivity extends AppCompatActivity {
         permission = new Permissions("Access Device Details", getResources().getString(R.string.device_details), getDrawable(R.drawable.ic_perm_device_information_black_24dp));
         permissions.add(permission);
 
-        permission = new Permissions("Access Device Camera", getResources().getString(R.string.device_camera), getDrawable(R.drawable.ic_camera_black_24dp));
-        permissions.add(permission);
+//        permission = new Permissions("Access Device Camera", getResources().getString(R.string.device_camera), getDrawable(R.drawable.ic_camera_black_24dp));
+//        permissions.add(permission);
 
         permission = new Permissions("Access Device Storage", getResources().getString(R.string.device_storage), getDrawable(R.drawable.ic_storage_black_24dp));
         permissions.add(permission);
 
-        permission = new Permissions("Access Contacts", getResources().getString(R.string.contacts_access), getDrawable(R.drawable.ic_contact_phone_black_24dp));
-        permissions.add(permission);
+//        permission = new Permissions("Access Contacts", getResources().getString(R.string.contacts_access), getDrawable(R.drawable.ic_contact_phone_black_24dp));
+//        permissions.add(permission);
 
         permission = new Permissions("Access Device Location", getResources().getString(R.string.device_location), getDrawable(R.drawable.ic_location_on_black_24dp));
         permissions.add(permission);

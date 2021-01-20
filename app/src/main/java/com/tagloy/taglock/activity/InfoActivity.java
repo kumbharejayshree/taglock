@@ -90,13 +90,14 @@ public class InfoActivity extends AppCompatActivity {
             }else {
                 versionName = "NULL";
             }
-            String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
-            taglockText.setText("Taglock Version: " + taglockVersion);
             appNameText.setText(appName + " Version: " + versionName);
 
         }catch (PackageManager.NameNotFoundException | NullPointerException ne){
             ne.printStackTrace();
         }
+
+        String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
+        taglockText.setText("Taglock Version: " + taglockVersion);
 
 //        TimeZone timeZone = TimeZone.getDefault();
 //        timeZoneText.append(" " + timeZone.getID());
