@@ -30,15 +30,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         mContext = this;
         final RemoteMessage message = remoteMessage;
-        final String apk_name = "apkmanagement/" + PreferenceHelper.getValueString(this,AppConfig.APK_NAME);
-        final String taglock_apk = "taglockmanagement/" + PreferenceHelper.getValueString(this,AppConfig.TAGLOCK_APK);
-        final boolean apkDown = PreferenceHelper.getValueBoolean(this,AppConfig.APK_DOWN_STATUS);
-        final boolean tagDown = PreferenceHelper.getValueBoolean(this,AppConfig.TAGLOCK_DOWN_STATUS);
+        final String apk_name = "apkmanagement/" + PreferenceHelper.getValueString(this, AppConfig.APK_NAME);
+        final String taglock_apk = "taglockmanagement/" + PreferenceHelper.getValueString(this, AppConfig.TAGLOCK_APK);
+        final boolean apkDown = PreferenceHelper.getValueBoolean(this, AppConfig.APK_DOWN_STATUS);
+        final boolean tagDown = PreferenceHelper.getValueBoolean(this, AppConfig.TAGLOCK_DOWN_STATUS);
         if (remoteMessage.getData().size() > 0) {
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(() -> {
                 //Toast.makeText(getApplicationContext(), "Data: " + message.getData().get("command"), Toast.LENGTH_LONG).show();
                 String command = message.getData().get("command");
+                Log.d("FCMcommand", command);
                 switch (command) {
                     case "restart":
                         superClass.restartDevice();
@@ -46,15 +47,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     case "shutdown":
                         superClass.shutdownDevice();
                         break;
+                    case "uninstall":
+                        SuperClass.uninstallApp();
+                        break;
                     case "update":
-                        if (apkDown){
-                            new MainActivity.UpdateApp(getApplicationContext(),apk_name).execute();
-                        }else {
+                        if (apkDown) {
+                            new MainActivity.UpdateApp(getApplicationContext(), apk_name).execute();
+                        } else {
                             apkManagement.getApk();
                         }
                         break;
                     case "clear":
                         SuperClass.clearData();
+                        break;
+                    case "cleardownloadmanager":
+                        SuperClass.clearDownloadManager();
                         break;
                     case "refresh":
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -62,15 +69,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                         }
                         break;
                     case "unlock":
-                        PreferenceHelper.setValueBoolean(mContext,AppConfig.IS_LOCKED,false);
+                        PreferenceHelper.setValueBoolean(mContext, AppConfig.IS_LOCKED, false);
                         break;
                     case "installtag":
-                        new MainActivity.InstallApp(getApplicationContext(),taglock_apk).execute();
+                        new MainActivity.InstallApp(getApplicationContext(), taglock_apk).execute();
                         break;
                     case "updatetag":
-                        if (tagDown){
-                            new MainActivity.UpdateTaglock(getApplicationContext(),taglock_apk).execute();
-                        }else {
+                        if (tagDown) {
+                            new MainActivity.UpdateTaglock(getApplicationContext(), taglock_apk).execute();
+                        } else {
                             apkManagement.getTaglock();
                         }
                         break;
@@ -83,7 +90,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public void onNewToken(String token) {
         FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(instanceIdResult -> {
             String deviceToken = instanceIdResult.getToken();
-            PreferenceHelper.setValueString(getApplicationContext(),AppConfig.FCM_TOKEN,deviceToken);
+            PreferenceHelper.setValueString(getApplicationContext(), AppConfig.FCM_TOKEN, deviceToken);
         });
     }
 }

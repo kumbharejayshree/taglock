@@ -758,6 +758,8 @@ public class TaglockDeviceInfo {
                                         }else{
                                             File imageFile = new File("/storage/emulated/0/.taglock/" + group_i);
                                             if (imageFile.exists()){
+                                                //if wallpaper downloaded set the flag to true by gourav on 27012021
+                                                PreferenceHelper.setValueBoolean(context, AppConfig.WALLPAPER_DOWN_STATUS, true);
                                                 Log.d("Wallpaper", "Exists");
                                             }else {
                                                 PreferenceHelper.setValueString(context,AppConfig.GROUP_WALLPAPER,group_image);

@@ -12,6 +12,7 @@
     <string name="connectivity_details">Connectivity Details</string>
     <string name="storage_details">Storage Details</string>
     <string name="orientation">Orientation</string>
+    <string name="clearData">Clear Download Manager</string>
     <string name="current_orientation">Current Orientation: </string>
     <string name="current_timezone">Current Timezone: </string>
     <string name="change_orientation"><u>Change Orientation</u></string>
@@ -40,6 +41,7 @@
     <string name="wifi">WiFi Settings</string>
     <string name="refresh">Refresh</string>
     <string name="clear">Clear Data</string>
+    <string name="clearDownloadManager">Clear Cache</string>
     <string name="exit">Exit Taglock</string>
     <string name="network_settings">Network Settings</string>
     <string name="rotation">Rotation Settings</string>

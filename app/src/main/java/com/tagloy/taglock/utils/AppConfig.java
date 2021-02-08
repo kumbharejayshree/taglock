@@ -16,7 +16,7 @@ public class AppConfig {
 //    public static final String BASE_URL = "https://telelockapi.tagcx.com";
 
     //Localhost base URL
-//    public static final String BASE_URL = "http://10.10.11.122/taglock_data";
+//    public static final String BASE_URL = "http://10.10.11.108/taglock-api";
 
     public static final String NAME_VALIDITY_URL = BASE_URL + "/device/validname";
     public static final String FCM_URL = BASE_URL + "/device/token";

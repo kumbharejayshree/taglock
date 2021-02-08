@@ -7,6 +7,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -16,10 +17,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -64,6 +68,7 @@ public class AdminActivity extends AppCompatActivity {
     TextView submitPermission;
     List<Permissions> permissions = new ArrayList<>();
     PermissionsAdapter permissionsAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,20 +92,20 @@ public class AdminActivity extends AppCompatActivity {
                 | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         permissionListView = findViewById(R.id.permissionsList);
         permissionListView.setOnItemClickListener((parent, view, position, id) -> {
-            if (position == 0){
+            if (position == 0) {
                 Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
                 intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, devicePolicyAdmin);
                 intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, getString(R.string.admin_explanation));
                 startActivityForResult(intent, REQUEST_ENABLE);
-            }else if (position == 1){
+            } else if (position == 1) {
                 if (Build.VERSION.SDK_INT >= 23) {
                     permissionsClass.getPermission(this, this, Manifest.permission.PACKAGE_USAGE_STATS, REQUEST_USAGE_ACCESS);
                 }
-            }else if (position == 2){
+            } else if (position == 2) {
                 if (Build.VERSION.SDK_INT >= 23) {
                     permissionsClass.getPermission(this, this, Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE, REQUEST_APP_NOTIFICATION);
                 }
-            }else if (position == 4){
+            } else if (position == 4) {
                 if (Build.VERSION.SDK_INT >= 23) {
                     permissionsClass.getPermission(this, this, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
                 }
@@ -120,15 +125,15 @@ public class AdminActivity extends AppCompatActivity {
                 Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
                 startActivity(intent);
             } else {
-                if (!phone){
+                if (!phone) {
                     superClass.enablePhoneCalls(getPackageName());
                     superClass.enablePhoneState(getPackageName());
                 }
-                if (!location || !coarseLocation){
+                if (!location || !coarseLocation) {
                     superClass.enableLocation(getPackageName());
                     superClass.enableCoarseLocation(getPackageName());
                 }
-                if (!storage || !wStorage){
+                if (!storage || !wStorage) {
                     superClass.enableStorage(getPackageName());
                     superClass.enableReadStorage(getPackageName());
                 }
@@ -147,6 +152,21 @@ public class AdminActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         permissionsAdapter.notifyDataSetChanged();
+    }
+
+    // when user clicks Backbutton it will pop confirmation Dialog Box by gourav on 27012021
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setMessage("Are you sure you want to exit?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        finish();
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 
     @Override
@@ -182,26 +202,27 @@ public class AdminActivity extends AppCompatActivity {
         }
     }
 
-    public void enableSubmit(){
+    public void enableSubmit() {
         submitPermission.setClickable(true);
         submitPermission.setTextColor(getResources().getColor(R.color.tagColor));
         submitPermission.setOnClickListener(v -> {
-            if (isMyPolicyActive()){
+            if (isMyPolicyActive()) {
                 boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
                 boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
                 boolean storage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                if (phone && location && storage){
+                if (phone && location && storage) {
                     SuperClass.enableActivity(AdminActivity.this);
-                    Intent intent = new Intent(AdminActivity.this,NetworkActivity.class);
+                    Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
                     startActivity(intent);
-                }else {
+                } else {
                     taglockDeviceInfo.showMessage("Please Grant root permission and restart the application!");
                 }
-            }else {
+            } else {
                 taglockDeviceInfo.showMessage("Please grant admin permission");
             }
         });
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -255,7 +276,7 @@ public class AdminActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private void requestPermissions(){
+    private void requestPermissions() {
         ArrayList<String> permissionsArrayList = new ArrayList<>();
         permissionsArrayList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         permissionsArrayList.add(Manifest.permission.READ_PHONE_STATE);
@@ -266,13 +287,14 @@ public class AdminActivity extends AppCompatActivity {
         permissionsArrayList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
         permissionsArrayList.add(Manifest.permission.ACCESS_FINE_LOCATION);
         List<String> remainingPermissions = new ArrayList<>();
-        for (String permission : permissionsArrayList){
+        for (String permission : permissionsArrayList) {
             if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 remainingPermissions.add(permission);
             }
         }
-        requestPermissions(remainingPermissions.toArray(new String[remainingPermissions.size()]),REQUEST_PERMISSIONS);
+        requestPermissions(remainingPermissions.toArray(new String[remainingPermissions.size()]), REQUEST_PERMISSIONS);
     }
+
     private boolean isNotificationServiceRunning() {
         ContentResolver contentResolver = getContentResolver();
         String enabledNotificationListeners =
@@ -356,7 +378,7 @@ public class AdminActivity extends AppCompatActivity {
             AppOpsManager appOpsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
             int mode = 0;
             mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
-                        applicationInfo.uid, applicationInfo.packageName);
+                    applicationInfo.uid, applicationInfo.packageName);
             return (mode == AppOpsManager.MODE_ALLOWED);
 
         } catch (PackageManager.NameNotFoundException e) {

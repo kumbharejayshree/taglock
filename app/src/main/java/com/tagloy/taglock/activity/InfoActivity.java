@@ -15,6 +15,7 @@ import android.net.NetworkInfo;
 import android.os.Handler;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -34,16 +35,16 @@ import io.realm.RealmResults;
 
 public class InfoActivity extends AppCompatActivity {
 
-    TextView deviceNameText,deviceGroupText,taglockText,appNameText,ipText,wifiMacText,lanMacText,
-            storageText,connectionText, connectivityText, orientationText,
+    TextView deviceNameText, deviceGroupText, taglockText, appNameText, ipText, wifiMacText, lanMacText,
+            storageText, connectionText, connectivityText, orientationText,
             orientationTextView; //timeZoneText, changeTimeZoneText;
     TaglockDeviceInfo taglockDeviceInfo;
     SuperClass superClass;
     ApplicationInfo app;
     PackageManager manager;
     CharSequence appName = "";
-    String ip,versionName;
-    Button netTestSpeed;
+    String ip, versionName;
+    Button netTestSpeed, clearDownloadManager;
     Context context = InfoActivity.this;
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
@@ -60,6 +61,7 @@ public class InfoActivity extends AppCompatActivity {
         connectionText = findViewById(R.id.connection_text);
         connectivityText = findViewById(R.id.connectivity_text);
         netTestSpeed = findViewById(R.id.networkTestBtn);
+        clearDownloadManager = findViewById(R.id.clearDownloadManagerBtn);
         ipText = findViewById(R.id.ip_text);
         wifiMacText = findViewById(R.id.wifiMac_text);
         lanMacText = findViewById(R.id.lanMac_text);
@@ -85,18 +87,18 @@ public class InfoActivity extends AppCompatActivity {
             app = manager.getApplicationInfo(pack, PackageManager.GET_META_DATA);
             appName = manager.getApplicationLabel(app);
             boolean isDefaultInstalled = superClass.appInstalled(pack);
-            if (isDefaultInstalled){
-                versionName = TaglockDeviceInfo.getVersion(this,pack);
-            }else {
+            if (isDefaultInstalled) {
+                versionName = TaglockDeviceInfo.getVersion(this, pack);
+            } else {
                 versionName = "NULL";
             }
             appNameText.setText(appName + " Version: " + versionName);
 
-        }catch (PackageManager.NameNotFoundException | NullPointerException ne){
+        } catch (PackageManager.NameNotFoundException | NullPointerException ne) {
             ne.printStackTrace();
         }
 
-        String taglockVersion = TaglockDeviceInfo.getVersion(this,getPackageName());
+        String taglockVersion = TaglockDeviceInfo.getVersion(this, getPackageName());
         taglockText.setText("Taglock Version: " + taglockVersion);
 
 //        TimeZone timeZone = TimeZone.getDefault();
@@ -113,21 +115,21 @@ public class InfoActivity extends AppCompatActivity {
 //        });
 
         connectionText.setText("Network Source: ");
-        if (taglockDeviceInfo.isEthernetConnected()){
+        if (taglockDeviceInfo.isEthernetConnected()) {
             connectionText.append("LAN");
-        }else if (taglockDeviceInfo.isWifiConnected()){
+        } else if (taglockDeviceInfo.isWifiConnected()) {
             connectionText.append("WiFi");
-        }else {
+        } else {
             connectionText.append("Not connected to internet");
         }
         String mac = TaglockDeviceInfo.getMACAddress("wlan0");
         String macAddressEthernet = TaglockDeviceInfo.getMACAddress("eth0");
-        if (taglockDeviceInfo.isWifiConnected()){
+        if (taglockDeviceInfo.isWifiConnected()) {
             Integer ipAddress = taglockDeviceInfo.getWifiIp();
             ip = taglockDeviceInfo.intToIp(ipAddress);
-        }else if (taglockDeviceInfo.isEthernetConnected()){
+        } else if (taglockDeviceInfo.isEthernetConnected()) {
             ip = taglockDeviceInfo.getLANIp();
-        }else {
+        } else {
             ip = "NA";
         }
         ipText.setText("IP Address: " + ip);
@@ -142,6 +144,10 @@ public class InfoActivity extends AppCompatActivity {
         netTestSpeed.setOnClickListener(v -> {
             Intent intent = new Intent(InfoActivity.this, WebActivity.class);
             startActivity(intent);
+        });
+        //clear cache button added by gourav
+        clearDownloadManager.setOnClickListener(v -> {
+            SuperClass.clearDownloadManager();
         });
 
         int orientation = getResources().getConfiguration().orientation;
@@ -168,38 +174,38 @@ public class InfoActivity extends AppCompatActivity {
 //            startActivity(positionIntent);
 //        });
 
-        registerReceiver(connectionReceiver,new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     private BroadcastReceiver connectionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent == null || intent.getExtras() == null)
+            if (intent == null || intent.getExtras() == null)
                 return;
 
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
             NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-            if (networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED){
-                if (taglockDeviceInfo.isWifiConnected()){
+            if (networkInfo != null && networkInfo.getState() == NetworkInfo.State.CONNECTED) {
+                if (taglockDeviceInfo.isWifiConnected()) {
                     Integer ipAddress = taglockDeviceInfo.getWifiIp();
                     ip = taglockDeviceInfo.intToIp(ipAddress);
-                }else if (taglockDeviceInfo.isEthernetConnected()){
+                } else if (taglockDeviceInfo.isEthernetConnected()) {
                     ip = taglockDeviceInfo.getLANIp();
-                }else {
+                } else {
                     ip = "NA";
                 }
                 connectionText.setText("Network Source: ");
                 ipText.setText("IPAddress: " + ip);
-                if(!taglockDeviceInfo.isNetworkConnected()) {
+                if (!taglockDeviceInfo.isNetworkConnected()) {
                     ipText.append("(Not connected to internet)");
-                }else{
-                    if (taglockDeviceInfo.isEthernetConnected()){
+                } else {
+                    if (taglockDeviceInfo.isEthernetConnected()) {
                         connectionText.append("LAN");
-                    }else if (taglockDeviceInfo.isWifiConnected()){
+                    } else if (taglockDeviceInfo.isWifiConnected()) {
                         connectionText.append("WiFi");
                     }
                 }
-            }else {
+            } else {
                 ip = "NA";
                 ipText.setText("IPAddress: " + ip);
                 connectionText.setText("Network Source: ");
@@ -218,6 +224,6 @@ public class InfoActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(connectionReceiver,new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        registerReceiver(connectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 }
