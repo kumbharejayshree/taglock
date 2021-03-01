@@ -208,11 +208,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             @Override
             public void onFinish() {
                 appTimerText.setVisibility(View.INVISIBLE);
-                if (!SuperClass.isAppRunning(context, pack)) {
-                    Intent intent = getPackageManager().getLaunchIntentForPackage(pack);
-                    startActivity(intent);
+                isDefaultInstalled = superClass.appInstalled(pack);
+                if (isDefaultInstalled) {
+                    if (!SuperClass.isAppRunning(context, pack)) {
+                        Intent intent = getPackageManager().getLaunchIntentForPackage(pack);
+                        startActivity(intent);
+                    } else {
+                        Log.d(TAG, "Waiting...");
+                    }
                 } else {
-                    Log.d(TAG, "Waiting...");
+                    Log.d("StatusOnTimer", "APK is not installed");
+                    apkManagement.getApk();
                 }
             }
         };
