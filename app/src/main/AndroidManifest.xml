@@ -24,6 +24,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
+
     <!--    <uses-permission android:name="android.permission.READ_CONTACTS" />-->
     <!--    <uses-permission android:name="android.permission.WRITE_CONTACTS" />-->
     <uses-permission
@@ -38,6 +39,8 @@
         android:name="android.permission.INSTALL_PACKAGES"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.INTERNAL_SYSTEM_WINDOW"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.ACTION_MANAGE_OVERLAY_PERMISSION" />
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
@@ -68,7 +71,7 @@
         <activity
             android:name=".activity.SplashActivity"
             android:excludeFromRecents="true"
-            android:exported="false"
+            android:exported="true"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -88,6 +91,7 @@
             android:parentActivityName=".activity.AdminActivity" />
         <activity
             android:name=".activity.DeviceDetailActivity"
+            android:windowSoftInputMode="stateVisible"
             android:configChanges="orientation|screenSize"
             android:label="@string/device_detail"
             android:launchMode="singleTask"
@@ -98,14 +102,16 @@
             android:configChanges="orientation|screenSize"
             android:excludeFromRecents="true"
             android:immersive="true"
-            android:launchMode="singleInstance">
+            android:launchMode="singleTask"
+            android:parentActivityName=".activity.DeviceDetailActivity" >
             <intent-filter>
+
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.MONKEY" />
+
 
                 <action android:name="OPEN_ACTIVITY_1" />
             </intent-filter>
@@ -128,12 +134,10 @@
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.tagloy.taglock.provider"
             android:exported="false"
-            android:grantUriPermissions="true"
-            tools:replace="android:authorities">
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths"
-                tools:replace="android:resource" />
+                android:resource="@xml/filepaths" />
         </provider>
         <receiver
             android:name=".receiver.TaglockAdminReceiver"

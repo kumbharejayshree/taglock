@@ -95,7 +95,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/group_id"
-            android:inputType="number" />
+            android:inputType="number"
+            android:text=""/>
     </LinearLayout>
 
     <LinearLayout
@@ -111,7 +112,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/group_key"
-            android:inputType="textPassword" />
+            android:inputType="textPassword"
+            android:text=""/>
     </LinearLayout>
 
     <LinearLayout

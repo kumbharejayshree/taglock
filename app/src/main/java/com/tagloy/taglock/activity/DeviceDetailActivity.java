@@ -1,23 +1,33 @@
 package com.tagloy.taglock.activity;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.utils.AppConfig;
 import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.SuperClass;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
+import com.topjohnwu.superuser.Shell;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.tagloy.taglock.utils.SuperClass.context;
 
 public class DeviceDetailActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -28,6 +38,7 @@ public class DeviceDetailActivity extends AppCompatActivity implements View.OnCl
     ArrayAdapter<String> arrayAdapter;
     TaglockDeviceInfo taglockDeviceInfo;
     SharedPreferences sharedPreferences;
+    MainActivity networkActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +53,27 @@ public class DeviceDetailActivity extends AppCompatActivity implements View.OnCl
         submitGroupBtn.setOnClickListener(this);
         superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
-        PreferenceHelper.setValueBoolean(this, AppConfig.APK_DOWN_STATUS,false);
-        PreferenceHelper.setValueBoolean(this,AppConfig.TAGLOCK_DOWN_STATUS,true);
-        if (Build.VERSION.SDK_INT>=23)
-            taglockDeviceInfo.hideStatusBar();
-        taglockDeviceInfo.getLauncher();
+        PreferenceHelper.setValueBoolean(this, AppConfig.APK_DOWN_STATUS, false);
+        PreferenceHelper.setValueBoolean(this, AppConfig.TAGLOCK_DOWN_STATUS, true);
+
+        if (Build.VERSION.SDK_INT >= 23 && !Settings.canDrawOverlays(this))
+            if (Shell.rootAccess()) {
+                askPermission();
+                taglockDeviceInfo.hideStatusBar();
+                taglockDeviceInfo.getLauncher();
+            } else {
+                //taglockDeviceInfo.hideStatusBar();
+                taglockDeviceInfo.getLauncher();
+            }
+
+
+    }
+
+    @TargetApi(23)
+    public void askPermission() {
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + getPackageName()));
+        startActivityForResult(intent, 0);
     }
 
     @Override
@@ -65,7 +92,10 @@ public class DeviceDetailActivity extends AppCompatActivity implements View.OnCl
                 String groupId = groupIdEdit.getText().toString();
                 taglockDeviceInfo.getGroup(groupId);
                 taglockDeviceInfo.checkGroupKey(deviceName, groupId, groupKey);
+
+
             }
+
         }
     }
 }

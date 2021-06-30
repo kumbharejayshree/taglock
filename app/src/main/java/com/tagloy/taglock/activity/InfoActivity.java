@@ -102,17 +102,17 @@ public class InfoActivity extends AppCompatActivity {
         taglockText.setText("Taglock Version: " + taglockVersion);
 
 //        TimeZone timeZone = TimeZone.getDefault();
-//        timeZoneText.append(" " + timeZone.getID());
-//
-//        changeTimeZoneText.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Toast.makeText(context, "Changed!", Toast.LENGTH_LONG).show();
-//                taglockDeviceInfo.setTimeZone("Asia/Kolkata");
-//                Intent intent = new Intent(Settings.DAT);
-//                startActivity(intent);
-//            }
-//        });
+////        timeZoneText.append(" " + timeZone.getID());
+////
+////        changeTimeZoneText.setOnClickListener(new View.OnClickListener() {
+////            @Override
+////            public void onClick(View v) {
+////                Toast.makeText(context, "Changed!", Toast.LENGTH_LONG).show();
+////                taglockDeviceInfo.setTimeZone("Asia/Kolkata");
+////                Intent intent = new Intent(Settings.DAT);
+////                startActivity(intent);
+////            }
+////        });
 
         connectionText.setText("Network Source: ");
         if (taglockDeviceInfo.isEthernetConnected()) {

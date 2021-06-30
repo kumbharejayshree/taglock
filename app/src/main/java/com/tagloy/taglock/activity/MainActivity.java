@@ -5,17 +5,11 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -23,7 +17,6 @@ import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
@@ -35,15 +28,11 @@ import android.provider.Settings;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.MotionEventCompat;
 
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Display;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -71,6 +60,7 @@ import com.tagloy.taglock.models.Item;
 import com.tagloy.taglock.utils.PermissionsClass;
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.utils.SuperClass;
+import com.topjohnwu.superuser.Shell;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -82,8 +72,7 @@ import java.util.TimerTask;
 import io.realm.RealmResults;
 import pl.droidsonroids.gif.GifImageView;
 
-public class MainActivity extends AppCompatActivity implements LocationListener,
-        PopupMenu.OnMenuItemClickListener {
+public class MainActivity extends AppCompatActivity implements LocationListener, PopupMenu.OnMenuItemClickListener {
 
     Context context = MainActivity.this;
     DeviceInfoController deviceInfoController = new DeviceInfoController();
@@ -112,15 +101,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     CountDownTimer updateCountDownTimer, appCountDownTimer;
     ApkManagement apkManagement;
     boolean isDefaultInstalled;
+    String pack;
+
+
+
+
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+
+
+
+        //getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+
 
         //Firebase Crashlytics configuration
         FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true);
+
+
 
         //Custom Actionbar
         Objects.requireNonNull(getSupportActionBar()).setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
@@ -128,6 +130,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         getSupportActionBar().setCustomView(R.layout.toolbar);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+
 
         //Viewgroup Initialization
         mainLayout = findViewById(R.id.mainLayout);
@@ -146,11 +153,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         menuBtn.setOnClickListener(this::showPopup);
 
+
         //Necessary class objects
         superClass = new SuperClass(this);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         apkManagement = new ApkManagement(this);
         //clear Download Manager On Every Restart by gourav 21012021
+
         SuperClass.clearDownloadManager();
         Log.d("ClearDownload", "onCreate()");
         //Mute audio
@@ -160,19 +169,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             audioManager.setStreamVolume(AudioManager.STREAM_SYSTEM, 0, 0);
         }
 
+
         //Realm Controller
         final DefaultProfileController defaultProfileController = new DefaultProfileController();
         RealmResults<DefaultProfile> getProfile = defaultProfileController.geDefaultProfileData();
+        Log.e("SIZE", String.valueOf(getProfile.size()));
+
+
         final String pack = getProfile.get(0).getApp_package_name();
+        //Log.e("Pack",pack);
         app_call_duration = getProfile.get(0).getDefault_apk_call_duration();
+
 
         //Log the Crashlytics user
         logUser();
 
         String taglockVersion = TaglockDeviceInfo.getVersion(this, getPackageName());
         isDefaultInstalled = superClass.appInstalled(pack);
+
         if (isDefaultInstalled) {
             versionName = TaglockDeviceInfo.getVersion(this, pack);
+            Log.e("Version",versionName);
             PreferenceHelper.setValueString(context, AppConfig.APK_VERSION, versionName);
             try {
                 apps = manager.getApplicationInfo(pack, PackageManager.GET_META_DATA);
@@ -186,8 +203,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             versionText.setText("Taglock Version: " + taglockVersion);
         }
 
+
         //If debugging is enabled, then disable it
 //        if(Settings.Secure.getInt(context.getContentResolver(), Settings.Secure.ADB_ENABLED, 0) == 1) {
+//            // debugging enabled
 //            // debugging enabled
 //            superClass.switchDebugging(0);
 //        }
@@ -219,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 } else {
                     Log.d("StatusOnTimer", "APK is not installed");
                     apkManagement.getApk();
+
                 }
             }
         };
@@ -228,9 +248,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 //        superClass.hideNavToggle();
 
         //Hide status and nav bar
+
         if (Build.VERSION.SDK_INT >= 23) {
-            taglockDeviceInfo.hideStatusBar();
-            superClass.hideNav();
+            if(Shell.rootAccess()){
+                taglockDeviceInfo.hideStatusBar();
+                superClass.hideNav();
+            }else {
+                //taglockDeviceInfo.hideStatusBar();
+            }
+
         }
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -261,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
         if (SuperClass.isAppRunning(context, packageName)) {
             Log.d("App", "Running");
-            superClass.hideDefaultLauncher(packageName);
+           superClass.hideDefaultLauncher(packageName);
         }
 
         //If group wallpaper is assigned to group, download and display on screen
@@ -276,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             wallpaperImage.setBackgroundColor(getResources().getColor(R.color.blackWall));
             PreferenceHelper.setValueString(context, AppConfig.GROUP_WALLPAPER, "test");
             PreferenceHelper.setValueBoolean(context, AppConfig.WALLPAPER_DOWN_STATUS, false);
+
         } else {
             boolean wall_downloaded = PreferenceHelper.getValueBoolean(context, AppConfig.WALLPAPER_DOWN_STATUS);
             if (wall_downloaded) {
@@ -284,6 +311,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 if (imageFile.exists()) {
                     Picasso.get().load(imageFile).into(wallpaperImage);
                 }
+
             }
         }
 
@@ -292,8 +320,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         taglockDeviceInfo.deviceDetails(deviceInformation);
         boolean isActive = PreferenceHelper.getValueBoolean(this, AppConfig.IS_ACTIVE);
+
         //If default app is installed, open it
         if (isDefaultInstalled) {
+
             new appLoad(context).execute();
             if (isActive) {
                 appCountDownTimer.start();
@@ -304,9 +334,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 stopWifiTimer();
             }
         } else {
-            //Else download default app
             PreferenceHelper.removeStringValue(this, AppConfig.APK_NAME);
             apkManagement.getApk();
+            //Else download default app
+
         }
 
         //Checking for new apk and download if available
@@ -535,6 +566,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         popup.show();
     }
 
+
     //On Menu items selected
     @Override
     public boolean onMenuItemClick(MenuItem item) {
@@ -581,6 +613,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                     dialog.setCanceledOnTouchOutside(false);
                     dialog.show();
 
+
                     final Handler handler = new Handler();
                     final Runnable runnable = () -> {
                         if (dialog.isShowing()) {
@@ -604,9 +637,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
             //On rotation settings menu click
             case R.id.rotationMenu:
-                Intent rotationIntent = new Intent();
-                rotationIntent.setClassName("com.android.tv.settings", "com.android.tv.settings.device.display.rotation.ScreenRotationActivity");
-                startActivity(rotationIntent);
+                if(Shell.rootAccess()){
+                    Intent rotationIntent = new Intent();
+                    rotationIntent.setClassName("com.android.tv.settings", "com.android.tv.settings.device.display.rotation.ScreenRotationActivity");
+                    startActivity(rotationIntent);
+                }else {
+
+                }
+
                 return true;
 
             //On clear data menu click
@@ -659,8 +697,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     @Override
     protected void onPause() {
         super.onPause();
+
         unregisterReceiver(connectionReceiver);
     }
+
 
     //On activity resume
     @Override
@@ -669,8 +709,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         //Hide status and nav bar
 //        if (Build.VERSION.SDK_INT>=23){
 //            superClass.hideNav();
+        FullScreencall();
 //        }
         if (isDefaultInstalled) {
+            apkManagement.getApk();
             appTimerText.setVisibility(View.VISIBLE);
             appCountDownTimer.start();
         }
@@ -704,6 +746,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                     appCountDownTimer.start();
                 } else {
                     Log.d("Status", "APK is not installed");
+                    Log.d("Status", "APK Unrooted not installed");
                     apkManagement.getApk();
                 }
             } else {
@@ -754,7 +797,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         @Override
         protected Void doInBackground(Void... voids) {
-            SuperClass.installApp(fileName);
+            Log.e("FILE", fileName);
+            if(Shell.rootAccess()){
+                SuperClass.installApp(fileName);
+            }else
+            SuperClass.install(fileName);
+            appsGrid.invalidateViews();
+            gridAdapter.notifyDataSetChanged();
             return null;
         }
 
@@ -765,10 +814,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                 gridAdapter.notifyDataSetChanged();
                 taglockDeviceInfo = new TaglockDeviceInfo(context);
                 PreferenceHelper.setValueBoolean(context, AppConfig.INSTALL_STATUS, true);
+                Log.d("Status: ", "APK is installed");
                 String version = TaglockDeviceInfo.getVersion(context, pack);
                 PreferenceHelper.setValueString(context, AppConfig.APK_VERSION, version);
                 deviceInfo.setApp_download_status(PreferenceHelper.getValueBoolean(context, AppConfig.INSTALL_STATUS));
                 deviceInfo.setDefault_apk_version(version);
+                Log.e("vveeeeee",version);
                 deviceInfoController.updateApkDetails(deviceInfo);
                 taglockDeviceInfo.updateDevice(deviceInfo);
                 Intent intent = context.getPackageManager().getLaunchIntentForPackage(pack);
@@ -805,7 +856,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
         @Override
         protected Void doInBackground(Void... voids) {
-            SuperClass.updateApp(context, fileName);
+            if(Shell.rootAccess()){
+                SuperClass.updateApp(context, fileName);
+            }
+            else
+                SuperClass.install(fileName);
+               appsGrid.invalidateViews();
+                gridAdapter.notifyDataSetChanged();
             return null;
         }
 
@@ -862,4 +919,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             }
         }
     }
+
+    public void FullScreencall() {
+        if(Build.VERSION.SDK_INT > 11 && Build.VERSION.SDK_INT < 19) { // lower api
+            View v = this.getWindow().getDecorView();
+            v.setSystemUiVisibility(View.GONE);
+        } else if(Build.VERSION.SDK_INT >= 19) {
+            //for new api versions.
+            View decorView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            decorView.setSystemUiVisibility(uiOptions);
+        }
+    }
+
+
+
+
+
 }

@@ -2,21 +2,29 @@ package com.tagloy.taglock.utils;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.content.FileProvider;
 
+import com.tagloy.taglock.BuildConfig;
 import com.tagloy.taglock.activity.MainActivity;
 import com.tagloy.taglock.realmcontrollers.DefaultProfileController;
 import com.tagloy.taglock.realmmodels.DefaultProfile;
+import com.topjohnwu.superuser.internal.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,13 +33,20 @@ import java.util.Objects;
 
 import io.realm.RealmResults;
 
-public class SuperClass {
+import static com.topjohnwu.superuser.internal.Utils.getContext;
 
-    Context context;
+public class SuperClass {
+    PowerManager pm;
+
+
+   public static Context context;
 
     public SuperClass(Context context) {
         this.context = context;
     }
+    private static final int ORIENTATION_0 = 0;
+    private static final int ORIENTATION_90 = 3;
+    private static final int ORIENTATION_270 = 1;
 
     public static boolean findBinary(String binaryName) {
         boolean found = false;
@@ -116,6 +131,41 @@ public class SuperClass {
             ie.printStackTrace();
         }
     }
+    static String APP_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/.taglock/";
+
+    public static void install(String apkName) {
+        File file = new File(APP_DIR + apkName);
+
+        if (file.exists()) {
+            Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+            String type = "application/vnd.android.package-archive";
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Uri downloadedApk = FileProvider.getUriForFile(context, "com.tagloy.taglock.provider", file);
+                intent.setDataAndType(downloadedApk, type);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } else {
+                intent.setDataAndType(Uri.fromFile(file), type);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+
+           context.startActivity(intent);
+        } else {
+            Toast.makeText(context, "ّFile not found!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
+        private static Uri uriFromFile(Context context, File file) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                return FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", file);
+            } else {
+                return Uri.fromFile(file);
+            }
+        }
+
+
 
     //To uninstall app from given apk name by gourav on 25012021
     public static void uninstallApp() {
@@ -159,7 +209,7 @@ public class SuperClass {
             Log.d("ClearDownload", " - Success");
         } catch (IOException | InterruptedException ie) {
             ie.printStackTrace();
-            Log.e("ClearDownload", ie.getMessage());
+            Log.e("ClearDownloadM", ie.getMessage());
         }
     }
 
@@ -449,4 +499,21 @@ public class SuperClass {
             ie.printStackTrace();
         }
     }
+
+    public void reboot() {
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        pm.reboot("recovery");
+        pm.reboot(null);
+        // not working:
+        // reboot(null);
+    }
+
+
+
+
+
+
+
+
+
 }

@@ -53,7 +53,7 @@ public class NetworkActivity extends AppCompatActivity {
         submitNetwork = findViewById(R.id.submitNetwork);
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         if (Build.VERSION.SDK_INT>=23)
-            taglockDeviceInfo.hideStatusBar();
+            //taglockDeviceInfo.hideStatusBar();
         wifiListView = findViewById(R.id.wifiListView);
         wifiScanReceiver = new WifiScanReceiver();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);

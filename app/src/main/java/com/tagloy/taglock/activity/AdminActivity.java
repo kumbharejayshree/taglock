@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -32,6 +33,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.tagloy.taglock.R;
 import com.tagloy.taglock.adapters.PermissionsAdapter;
@@ -42,9 +44,16 @@ import com.tagloy.taglock.utils.PreferenceHelper;
 import com.tagloy.taglock.utils.SuperClass;
 import com.tagloy.taglock.receiver.TaglockAdminReceiver;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
+import com.topjohnwu.superuser.Shell;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.READ_PHONE_STATE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class AdminActivity extends AppCompatActivity {
 
@@ -64,10 +73,15 @@ public class AdminActivity extends AppCompatActivity {
     private static final int REQUEST_SETTING = 123;
     private static final int REQUEST_NOTIFICATION = 130;
     private static final int REQUEST_PERMISSIONS = 131;
+    private static final int PERMISSION_REQUEST_CODE = 200;
+    private static final int WRITE_SECURE_SETTINGS = 204;
+    private static final int REQUEST_INSTALLED_UNKNOWN_PACKGE = 205;
     ListView permissionListView;
     TextView submitPermission;
     List<Permissions> permissions = new ArrayList<>();
     PermissionsAdapter permissionsAdapter;
+    public static boolean b = false;
+    public static boolean a = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,9 +97,44 @@ public class AdminActivity extends AppCompatActivity {
         taglockDeviceInfo = new TaglockDeviceInfo(this);
         permissionsClass = new PermissionsClass(this);
         permissionsAdapter = new PermissionsAdapter(this, permissions);
-        SuperClass.grantRoot();
-        superClass.enableUnknownSource();
-        superClass.enableWriteSettings(getPackageName());
+
+        if (isMyPolicyActive()) {
+            if (Shell.rootAccess()) {
+                SuperClass.grantRoot();
+                superClass.enableUnknownSource();
+                superClass.enableWriteSettings(getPackageName());
+                boolean phone = superClass.checkPermission(READ_PHONE_STATE);
+                boolean location = superClass.checkPermission(ACCESS_FINE_LOCATION);
+                boolean coarseLocation = superClass.checkPermission(ACCESS_COARSE_LOCATION);
+                boolean storage = superClass.checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+                boolean wStorage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                if (phone && location && storage && coarseLocation) {
+                    PreferenceHelper.setValueBoolean(this, AppConfig.IS_ACTIVE, true);
+                    SuperClass.enableActivity(AdminActivity.this);
+                    Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
+                    startActivity(intent);
+                } else {
+                    if (!phone) {
+                        superClass.enablePhoneCalls(getPackageName());
+                        superClass.enablePhoneState(getPackageName());
+                    }
+                    if (!location || !coarseLocation) {
+                        superClass.enableLocation(getPackageName());
+                        superClass.enableCoarseLocation(getPackageName());
+                    }
+                    if (!storage || !wStorage) {
+                        superClass.enableStorage(getPackageName());
+                        superClass.enableReadStorage(getPackageName());
+                    }
+                }
+            } else {
+                //taglockDeviceInfo.showMessage("Please grant admin permissions");
+            }
+        } else {
+
+        }
+
+
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                 | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
@@ -105,15 +154,25 @@ public class AdminActivity extends AppCompatActivity {
                 if (Build.VERSION.SDK_INT >= 23) {
                     permissionsClass.getPermission(this, this, Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE, REQUEST_APP_NOTIFICATION);
                 }
+            } else if (position == 3) {
+                if (Build.VERSION.SDK_INT >= 23) {
+                    permissionsClass.getPermission(this, this, Manifest.permission.REQUEST_INSTALL_PACKAGES, REQUEST_INSTALLED_UNKNOWN_PACKGE);
+                }
             } else if (position == 4) {
                 if (Build.VERSION.SDK_INT >= 23) {
                     permissionsClass.getPermission(this, this, Manifest.permission.SYSTEM_ALERT_WINDOW, REQUEST_SYSTEM_ALERT);
+                } else if (position == 5) {
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        permissionsClass.getPermission(this, this, Manifest.permission.WRITE_SECURE_SETTINGS, REQUEST_SETTING);
+                    }
                 }
+
+
             }
         });
 //        View footerView = ((LayoutInflater) getSystemService(Activity.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.footer_layout,null,false);
 //        grantButton = footerView.findViewById(R.id.grantButton);
-        if (isMyPolicyActive()) {
+        /*if (isMyPolicyActive()) {
             boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
             boolean location = superClass.checkPermission(Manifest.permission.ACCESS_FINE_LOCATION);
             boolean coarseLocation = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
@@ -139,8 +198,8 @@ public class AdminActivity extends AppCompatActivity {
                 }
             }
         } else {
-            taglockDeviceInfo.showMessage("Please grant admin permission");
-        }
+            taglockDeviceInfo.showMessage("Please grant admin permissions");
+        }*/
 //        permissionListView.addFooterView(footerView);
         submitPermission = findViewById(R.id.submitPermission);
         submitPermission.setClickable(false);
@@ -185,6 +244,8 @@ public class AdminActivity extends AppCompatActivity {
                     break;
                 case REQUEST_SETTING:
                     taglockDeviceInfo.showMessage("Write settings permission granted");
+                    a = true;
+                    Log.e("nssasaxjz", String.valueOf(a));
                     finish();
                     startActivity(getIntent());
                     break;
@@ -198,6 +259,16 @@ public class AdminActivity extends AppCompatActivity {
                     finish();
                     startActivity(getIntent());
                     break;
+                case REQUEST_INSTALLED_UNKNOWN_PACKGE:
+                    taglockDeviceInfo.showMessage("Install permission granted");
+                    b = true;
+                    Log.e("nxjz", String.valueOf(b));
+                    finish();
+                    startActivity(getIntent());
+                    break;
+
+
+
             }
         }
     }
@@ -206,20 +277,37 @@ public class AdminActivity extends AppCompatActivity {
         submitPermission.setClickable(true);
         submitPermission.setTextColor(getResources().getColor(R.color.tagColor));
         submitPermission.setOnClickListener(v -> {
-            if (isMyPolicyActive()) {
-                boolean phone = superClass.checkPermission(Manifest.permission.READ_PHONE_STATE);
-                boolean location = superClass.checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-                boolean storage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                if (phone && location && storage) {
-                    SuperClass.enableActivity(AdminActivity.this);
-                    Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
-                    startActivity(intent);
-                } else {
-                    taglockDeviceInfo.showMessage("Please Grant root permission and restart the application!");
-                }
+            if (Shell.rootAccess()) {
+                if (isMyPolicyActive()) {
+                    boolean phone = superClass.checkPermission(READ_PHONE_STATE);
+                    boolean location = superClass.checkPermission(ACCESS_COARSE_LOCATION);
+                    boolean storage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+                    if (phone && location && storage) {
+                        SuperClass.enableActivity(AdminActivity.this);
+                        Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
+                        startActivity(intent);
+                    } else {
+                        taglockDeviceInfo.showMessage("Please Grant root permission and restart the application!");
+                    }
+                } else
+                    taglockDeviceInfo.showMessage("Please grant admin permissions");
             } else {
-                taglockDeviceInfo.showMessage("Please grant admin permission");
+                if (isMyPolicyActive()) {
+                    boolean phone = superClass.checkPermission(READ_PHONE_STATE);
+                    boolean location = superClass.checkPermission(ACCESS_COARSE_LOCATION);
+                    boolean storage = superClass.checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                    if (phone && location && storage && b) {
+                        SuperClass.enableActivity(AdminActivity.this);
+                        Intent intent = new Intent(AdminActivity.this, NetworkActivity.class);
+                        startActivity(intent);
+                    } else {
+                        taglockDeviceInfo.showMessage("Please Grant root permission and restart the application!");
+                    }
+                } else
+                    taglockDeviceInfo.showMessage("Please grant admin permissions");
             }
+
         });
     }
 
@@ -269,23 +357,40 @@ public class AdminActivity extends AppCompatActivity {
                     intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                     intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
                     intent.setData(Uri.parse("package:" + getPackageName()));
+                    a = true;
                     startActivityForResult(intent, REQUEST_SETTING);
                 }
                 break;
+
+            case REQUEST_INSTALLED_UNKNOWN_PACKGE:
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                    if (!isInstall()) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                        intent.setData(Uri.parse("package:" + getPackageName()));
+                        Log.e("SETDTA", String.valueOf(intent));
+                        startActivityForResult(intent, REQUEST_INSTALLED_UNKNOWN_PACKGE);
+                    }
+                }
+                break;
+
         }
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void requestPermissions() {
         ArrayList<String> permissionsArrayList = new ArrayList<>();
         permissionsArrayList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        permissionsArrayList.add(Manifest.permission.READ_PHONE_STATE);
+        permissionsArrayList.add(READ_PHONE_STATE);
         permissionsArrayList.add(Manifest.permission.PROCESS_OUTGOING_CALLS);
         permissionsArrayList.add(Manifest.permission.CAMERA);
         permissionsArrayList.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         permissionsArrayList.add(Manifest.permission.READ_CONTACTS);
-        permissionsArrayList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-        permissionsArrayList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        permissionsArrayList.add(ACCESS_COARSE_LOCATION);
+        permissionsArrayList.add(ACCESS_FINE_LOCATION);
         List<String> remainingPermissions = new ArrayList<>();
         for (String permission : permissionsArrayList) {
             if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
@@ -303,8 +408,20 @@ public class AdminActivity extends AppCompatActivity {
         return enabledNotificationListeners != null && enabledNotificationListeners.contains(packageName);
     }
 
+    private boolean isInstall() {
+        ContentResolver contentResolver = getContentResolver();
+        String getEnabledListener = Settings.Secure.getString(contentResolver, "enabled_install_listeners");
+        String packageName = getPackageName();
+        if (getEnabledListener == null || !getEnabledListener.contains(packageName)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public boolean isMyPolicyActive() {
         return devicePolicyManager.isAdminActive(devicePolicyAdmin);
+
     }
 
     private void PrepareData() {
@@ -385,4 +502,21 @@ public class AdminActivity extends AppCompatActivity {
             return false;
         }
     }
+
+    private void requestPermission() {
+
+        ActivityCompat.requestPermissions(this, new String[]{READ_PHONE_STATE, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+
+    }
+
+    private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(AdminActivity.this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+
 }

@@ -7,7 +7,6 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.tagloy.taglock.realm.RealmController;
 import com.facebook.stetho.Stetho;
-import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -37,11 +36,11 @@ public class MyApplication extends Application {
         this.mrealm = RealmController.with(this).getRealm();
 
         //for db debugging purpose you can view db structure in chrome
-        Stetho.initialize(
+       /* Stetho.initialize(
                 Stetho.newInitializerBuilder(this)
                         .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
-                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(this)
+                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).build())
                         .withDeleteIfMigrationNeeded(true).withLimit(100000).build())
-                        .build());
+                        .build());*/
     }
 }

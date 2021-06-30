@@ -4,13 +4,13 @@ public class AppConfig {
     //URLs used in Taglock
 
     //Preprod base URL for Taglock
-//    public static final String BASE_URL = "http://13.232.206.57";
+    //public static final String BASE_URL = "http://13.232.206.57";
 //
     // Preprod base URL for Taglock
-//    public static final String BASE_URL = "https://prelockapi.tagloy.com";
+     public static final String BASE_URL = "https://prelockapi.tagloy.com";
 
     //Prod base URL for Taglock
-    public static final String BASE_URL = "https://taglockapi.tagloy.com";
+     //public static final String BASE_URL = "https://taglockapi.tagloy.com";
 
     //Teleperfomance base URL for Taglock
 //    public static final String BASE_URL = "https://telelockapi.tagcx.com";
@@ -68,4 +68,5 @@ public class AppConfig {
     public static final String APP_DOWN_ID = "appid";
     public static final String TAGLOCK_DOWN_ID = "taglockid";
     public static final String WALLPAPER_DOWN_ID = "wallid";
+    public static final String ROOTED_DEVICE = "rooted";
 }

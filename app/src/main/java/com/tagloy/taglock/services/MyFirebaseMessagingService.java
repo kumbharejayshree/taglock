@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.util.Log;
 
 import com.tagloy.taglock.activity.MainActivity;
@@ -17,6 +18,7 @@ import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.tagloy.taglock.utils.TaglockDeviceInfo;
+import com.topjohnwu.superuser.Shell;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -25,10 +27,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     SuperClass superClass = new SuperClass(this);
     TaglockDeviceInfo taglockDeviceInfo = new TaglockDeviceInfo(this);
     ApkManagement apkManagement = new ApkManagement(this);
+    PowerManager pm;
+
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         mContext = this;
+        pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         final RemoteMessage message = remoteMessage;
         final String apk_name = "apkmanagement/" + PreferenceHelper.getValueString(this, AppConfig.APK_NAME);
         final String taglock_apk = "taglockmanagement/" + PreferenceHelper.getValueString(this, AppConfig.TAGLOCK_APK);
@@ -42,7 +47,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 Log.d("FCMcommand", command);
                 switch (command) {
                     case "restart":
-                        superClass.restartDevice();
+                        if(Shell.rootAccess()){
+                            superClass.restartDevice();
+                        }
+                        pm.reboot(null);
                         break;
                     case "shutdown":
                         superClass.shutdownDevice();

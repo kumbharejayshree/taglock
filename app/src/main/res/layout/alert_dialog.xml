@@ -11,5 +11,5 @@
         android:hint="@string/passcode"
         android:maxLength="8"
         android:inputType="numberPassword"
-        android:focusable="true"/>
+        android:focusable="true" />
 </LinearLayout>
