@@ -130,12 +130,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         getSupportActionBar().setCustomView(R.layout.toolbar);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        View decorView = getWindow().getDecorView();
+       /* View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
+        decorView.setSystemUiVisibility(uiOptions);*/
 
-
+/**/
         //Viewgroup Initialization
         mainLayout = findViewById(R.id.mainLayout);
         appsGrid = findViewById(R.id.appsGrid);
@@ -284,10 +284,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         }
 
         //Hide default launcher
-        String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
+        if(Shell.rootAccess()){
+             String packageName = PreferenceHelper.getValueString(this, AppConfig.DEVICE_LAUNCHER);
         if (SuperClass.isAppRunning(context, packageName)) {
             Log.d("App", "Running");
            superClass.hideDefaultLauncher(packageName);
+        }
+        }else {
+
         }
 
         //If group wallpaper is assigned to group, download and display on screen
